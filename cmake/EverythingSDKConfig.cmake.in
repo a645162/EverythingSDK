@@ -1,0 +1,11 @@
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/EverythingSDKTargets.cmake")
+
+set(EverythingSDK_NATIVE_DIR "${PACKAGE_PREFIX_DIR}/native")
+set(EverythingSDK_NATIVE_X86 "${EverythingSDK_NATIVE_DIR}/Everything32.dll")
+set(EverythingSDK_NATIVE_X64 "${EverythingSDK_NATIVE_DIR}/Everything64.dll")
+set(EverythingSDK_NATIVE_ARM "${EverythingSDK_NATIVE_DIR}/EverythingARM.dll")
+set(EverythingSDK_NATIVE_ARM64 "${EverythingSDK_NATIVE_DIR}/EverythingARM64.dll")
+
+check_required_components(EverythingSDK)
