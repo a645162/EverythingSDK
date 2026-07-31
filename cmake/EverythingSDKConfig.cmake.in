@@ -1,5 +1,9 @@
 @PACKAGE_INIT@
 
+if(NOT WIN32)
+    message(FATAL_ERROR "EverythingSDK VC support currently targets Windows only.")
+endif()
+
 include("${CMAKE_CURRENT_LIST_DIR}/EverythingSDKTargets.cmake")
 
 set(EverythingSDK_NATIVE_DIR "${PACKAGE_PREFIX_DIR}/native")
