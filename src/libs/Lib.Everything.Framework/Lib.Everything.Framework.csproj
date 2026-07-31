@@ -28,6 +28,18 @@
     <Prefer32Bit>true</Prefer32Bit>
     <EverythingNativeAbi>x86</EverythingNativeAbi>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\AnyCPU\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+    <EverythingNativeAbi>AnyCPU</EverythingNativeAbi>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -72,6 +84,17 @@
     <PlatformTarget>x86</PlatformTarget>
     <Prefer32Bit>true</Prefer32Bit>
     <EverythingNativeAbi>x86</EverythingNativeAbi>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\AnyCPU\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+    <EverythingNativeAbi>AnyCPU</EverythingNativeAbi>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
     <DebugType>pdbonly</DebugType>
@@ -121,43 +144,43 @@
     <Compile Include="src\Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup Condition=" '$(EverythingNativeAbi)' == 'x86' ">
-    <Content Include="src\Native\Everything32.dll">
+    <Content Include="..\..\..\native\Everything32.dll">
       <Link>Everything32.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup Condition=" '$(EverythingNativeAbi)' == 'x64' ">
-    <Content Include="src\Native\Everything64.dll">
+    <Content Include="..\..\..\native\Everything64.dll">
       <Link>Everything64.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup Condition=" '$(EverythingNativeAbi)' == 'ARM' or '$(EverythingNativeAbi)' == 'Arm' or '$(EverythingNativeAbi)' == 'arm' ">
-    <Content Include="src\Native\EverythingARM.dll">
+    <Content Include="..\..\..\native\EverythingARM.dll">
       <Link>EverythingARM.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup Condition=" '$(EverythingNativeAbi)' == 'ARM64' or '$(EverythingNativeAbi)' == 'Arm64' or '$(EverythingNativeAbi)' == 'arm64' ">
-    <Content Include="src\Native\EverythingARM64.dll">
+    <Content Include="..\..\..\native\EverythingARM64.dll">
       <Link>EverythingARM64.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup Condition=" '$(EverythingNativeAbi)' == 'AnyCPU' ">
-    <Content Include="src\Native\Everything32.dll">
+    <Content Include="..\..\..\native\Everything32.dll">
       <Link>Everything32.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="src\Native\Everything64.dll">
+    <Content Include="..\..\..\native\Everything64.dll">
       <Link>Everything64.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="src\Native\EverythingARM.dll">
+    <Content Include="..\..\..\native\EverythingARM.dll">
       <Link>EverythingARM.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="src\Native\EverythingARM64.dll">
+    <Content Include="..\..\..\native\EverythingARM64.dll">
       <Link>EverythingARM64.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

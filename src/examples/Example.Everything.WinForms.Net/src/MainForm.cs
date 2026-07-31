@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Windows.Forms;
 using Lib.Everything;
 
-namespace Example.EverythingGUI
+namespace Example.Everything.WinForms.Net
 {
     public partial class MainForm : Form
     {
@@ -47,7 +47,7 @@ namespace Example.EverythingGUI
                     var version = EverythingClient.GetVersion();
                     if (version.Major != 0)
                     {
-                        Text = "Example.EverythingGUI - SDK " + version.ToString(4);
+                        Text = "Example.Everything.WinForms.Net - SDK " + version.ToString(4);
                         AppendLog("SDK 版本: " + version.ToString(4));
                     }
 

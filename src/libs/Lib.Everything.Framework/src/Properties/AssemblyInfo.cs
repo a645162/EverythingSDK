@@ -34,3 +34,5 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
 [assembly: InternalsVisibleTo("Test.Everything.Console")]
+[assembly: InternalsVisibleTo("Test.Everything.Framework")]
+[assembly: InternalsVisibleTo("Test.Everything.Net")]

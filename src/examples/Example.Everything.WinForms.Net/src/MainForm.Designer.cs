@@ -1,4 +1,4 @@
-namespace Example.EverythingGUI
+namespace Example.Everything.WinForms.Net
 {
     partial class MainForm
     {
@@ -211,7 +211,7 @@ namespace Example.EverythingGUI
             this.Controls.Add(this.txtError);
             this.Controls.Add(this.statusStrip);
             this.Controls.Add(this.topPanel);
-            this.Text = "Example.EverythingGUI";
+            this.Text = "Example.Everything.WinForms.Net";
             this.topPanel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.numMax)).EndInit();
             this.statusStrip.ResumeLayout(false);

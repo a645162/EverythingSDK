@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>Example.Everything.WPF.Framework</RootNamespace>
+    <AssemblyName>Example.Everything.WPF.Framework</AssemblyName>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
+    <EnableDefaultPageItems>false</EnableDefaultPageItems>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\libs\Lib.Everything.Framework\Lib.Everything.Framework.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ApplicationDefinition Include="src\App.xaml" />
+    <Page Include="src\MainWindow.xaml" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFrameworks>net6.0-windows;net8.0-windows;net10.0-windows</TargetFrameworks>
+    <UseWPF>true</UseWPF>
+    <SupportedOSPlatformVersion>6.1</SupportedOSPlatformVersion>
+    <RootNamespace>Example.Everything.WPF.Net</RootNamespace>
+    <AssemblyName>Example.Everything.WPF.Net</AssemblyName>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
+    <EnableDefaultPageItems>false</EnableDefaultPageItems>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\libs\Lib.Everything.Net\Lib.Everything.Net.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ApplicationDefinition Include="src\App.xaml" />
+    <Page Include="src\MainWindow.xaml" />
+  </ItemGroup>
+</Project>

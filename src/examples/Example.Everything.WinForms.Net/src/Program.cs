@@ -1,7 +1,7 @@
 using System;
 using System.Windows.Forms;
 
-namespace Example.EverythingGUI
+namespace Example.Everything.WinForms.Net
 {
     internal static class Program
     {

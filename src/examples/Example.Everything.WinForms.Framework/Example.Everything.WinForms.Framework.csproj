@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
     <ProjectGuid>{A1B2C3D4-1234-4321-AAAA-000000000001}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>Example.EverythingGUI</RootNamespace>
-    <AssemblyName>Example.EverythingGUI</AssemblyName>
+    <RootNamespace>Example.Everything.WinForms.Framework</RootNamespace>
+    <AssemblyName>Example.Everything.WinForms.Framework</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -52,7 +52,7 @@
     <Compile Include="src\Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\libs\Lib.Everything\Lib.Everything.csproj">
+    <ProjectReference Include="..\..\libs\Lib.Everything.Framework\Lib.Everything.Framework.csproj">
       <Project>{C8099BEB-1BBD-4853-B8F3-8E4CFE1ECF16}</Project>
       <Name>Lib.Everything</Name>
     </ProjectReference>
