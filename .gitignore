@@ -1,0 +1,24 @@
+# Visual Studio and .NET build artifacts
+.vs/
+.vscode/
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Logs and caches
+*.log
+*.cache
+*.pdb
+
+# OS files
+Thumbs.db
+.DS_Store

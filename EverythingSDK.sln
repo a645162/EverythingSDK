@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libs", "libs", "{E431C0EF-0A07-9D2C-3EA9-2C750D5184D2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{224702AF-426D-4FAF-8C47-91D204387E7A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lib.Everything", "src\libs\Lib.Everything\Lib.Everything.csproj", "{C8099BEB-1BBD-4853-B8F3-8E4CFE1ECF16}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example.EverythingGUI", "src\examples\Example.EverythingGUI\Example.EverythingGUI.csproj", "{A1B2C3D4-1234-4321-AAAA-000000000001}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C8099BEB-1BBD-4853-B8F3-8E4CFE1ECF16}.Debug|x64.ActiveCfg = Debug|x64
+		{C8099BEB-1BBD-4853-B8F3-8E4CFE1ECF16}.Debug|x64.Build.0 = Debug|x64
+		{C8099BEB-1BBD-4853-B8F3-8E4CFE1ECF16}.Release|x64.ActiveCfg = Release|x64
+		{C8099BEB-1BBD-4853-B8F3-8E4CFE1ECF16}.Release|x64.Build.0 = Release|x64
+		{A1B2C3D4-1234-4321-AAAA-000000000001}.Debug|x64.ActiveCfg = Debug|x64
+		{A1B2C3D4-1234-4321-AAAA-000000000001}.Debug|x64.Build.0 = Debug|x64
+		{A1B2C3D4-1234-4321-AAAA-000000000001}.Release|x64.ActiveCfg = Release|x64
+		{A1B2C3D4-1234-4321-AAAA-000000000001}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{E431C0EF-0A07-9D2C-3EA9-2C750D5184D2} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{224702AF-426D-4FAF-8C47-91D204387E7A} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{C8099BEB-1BBD-4853-B8F3-8E4CFE1ECF16} = {E431C0EF-0A07-9D2C-3EA9-2C750D5184D2}
+		{A1B2C3D4-1234-4321-AAAA-000000000001} = {224702AF-426D-4FAF-8C47-91D204387E7A}
+	EndGlobalSection
+EndGlobal
