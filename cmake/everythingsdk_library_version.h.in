@@ -1,0 +1,37 @@
+#pragma once
+
+namespace Lib
+{
+    namespace Everything
+    {
+    inline const char* SdkVersionString() noexcept
+    {
+        return "@EVERYTHINGSDK_VERSION@";
+    }
+
+    inline const char* AssemblyVersionString() noexcept
+    {
+        return "@EVERYTHINGSDK_ASSEMBLY_VERSION@";
+    }
+
+    inline const char* FileVersionString() noexcept
+    {
+        return "@EVERYTHINGSDK_FILE_VERSION@";
+    }
+
+    constexpr unsigned int SdkVersionMajor() noexcept
+    {
+        return @EVERYTHINGSDK_VERSION_MAJOR@;
+    }
+
+    constexpr unsigned int SdkVersionMinor() noexcept
+    {
+        return @EVERYTHINGSDK_VERSION_MINOR@;
+    }
+
+    constexpr unsigned int SdkVersionPatch() noexcept
+    {
+        return @EVERYTHINGSDK_VERSION_PATCH@;
+    }
+    }
+}

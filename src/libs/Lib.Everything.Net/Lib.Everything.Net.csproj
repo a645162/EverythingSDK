@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\..\EverythingSDK.Version.props" Condition="Exists('..\..\..\EverythingSDK.Version.props')" />
   <PropertyGroup>
     <TargetFrameworks>net6.0;net8.0;net10.0</TargetFrameworks>
     <RootNamespace>Lib.Everything</RootNamespace>
@@ -32,4 +33,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+
+  <Import Project="..\..\..\EverythingSDK.Version.targets" Condition="Exists('..\..\..\EverythingSDK.Version.targets')" />
 </Project>

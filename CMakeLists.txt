@@ -4,7 +4,13 @@ if(NOT WIN32)
     message(FATAL_ERROR "EverythingSDK VC support currently targets Windows only.")
 endif()
 
-project(EverythingSDK VERSION 1.0.0 LANGUAGES CXX)
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/everythingsdk_version.cmake")
+
+set(EVERYTHINGSDK_VERSION_PROPS
+    "${CMAKE_CURRENT_SOURCE_DIR}/EverythingSDK.Version.props")
+everythingsdk_load_version_from_props("${EVERYTHINGSDK_VERSION_PROPS}")
+
+project(EverythingSDK VERSION ${EverythingSdkVersion} LANGUAGES CXX)
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)

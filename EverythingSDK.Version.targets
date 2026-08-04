@@ -1,0 +1,31 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Condition="'$(UsingMicrosoftNETSdk)' != 'true'">
+    <Compile Include="$(IntermediateOutputPath)EverythingSdk.Version.g.cs" Visible="false" />
+  </ItemGroup>
+
+  <Target
+    Name="EverythingSdkGenerateVersionAssemblyInfo"
+    BeforeTargets="BeforeCompile"
+    Condition="'$(UsingMicrosoftNETSdk)' != 'true' or '$(TargetFramework)' != ''">
+    <PropertyGroup>
+      <EverythingSdkVersionAssemblyInfoPath Condition="'$(EverythingSdkVersionAssemblyInfoPath)' == ''">$(IntermediateOutputPath)EverythingSdk.Version.g.cs</EverythingSdkVersionAssemblyInfoPath>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <EverythingSdkAssemblyAttribute Include="System.Reflection.AssemblyVersionAttribute">
+        <_Parameter1>$(EverythingSdkAssemblyVersion)</_Parameter1>
+      </EverythingSdkAssemblyAttribute>
+      <EverythingSdkAssemblyAttribute Include="System.Reflection.AssemblyFileVersionAttribute">
+        <_Parameter1>$(EverythingSdkFileVersion)</_Parameter1>
+      </EverythingSdkAssemblyAttribute>
+      <EverythingSdkAssemblyAttribute Include="System.Reflection.AssemblyInformationalVersionAttribute">
+        <_Parameter1>$(EverythingSdkInformationalVersion)</_Parameter1>
+      </EverythingSdkAssemblyAttribute>
+    </ItemGroup>
+
+    <WriteCodeFragment
+      Language="C#"
+      OutputFile="$(EverythingSdkVersionAssemblyInfoPath)"
+      AssemblyAttributes="@(EverythingSdkAssemblyAttribute)" />
+  </Target>
+</Project>

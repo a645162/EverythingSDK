@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+#include <Lib/Everything/version.h>
+
 #ifdef RegisterClassEx
 #undef RegisterClassEx
 #endif

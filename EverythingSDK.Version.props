@@ -1,0 +1,8 @@
+<Project>
+  <PropertyGroup>
+    <EverythingSdkVersion>1.0.0</EverythingSdkVersion>
+    <EverythingSdkAssemblyVersion>1.0.0.0</EverythingSdkAssemblyVersion>
+    <EverythingSdkFileVersion>1.0.0.0</EverythingSdkFileVersion>
+    <EverythingSdkInformationalVersion>1.0.0</EverythingSdkInformationalVersion>
+  </PropertyGroup>
+</Project>
