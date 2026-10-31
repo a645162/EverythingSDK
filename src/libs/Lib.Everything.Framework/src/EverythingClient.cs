@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Lib.Everything
@@ -7,7 +8,8 @@ namespace Lib.Everything
     /// <summary>
     /// voidtools Everything SDK 的高层封装。
     /// 用法：构造后设置 SearchText/MatchCase 等属性，调用 Query() 取回结果；
-    /// 也可直接用静态 Search(searchText) 一步完成。需要 Everything 在后台运行。
+    /// 也可直接用静态 Search(searchText) 一步完成。
+    /// Windows 需要 Everything 在后台运行；POSIX 使用 locate/find/进程内扫描。
     /// 非线程安全，请单线程使用或在调用方加锁。
     /// </summary>
     public sealed class EverythingClient : IDisposable
@@ -62,32 +64,33 @@ namespace Lib.Everything
         /// </summary>
         public List<EverythingResult> Query()
         {
-            EverythingNative.Everything_Reset();
+            IEverythingBackend backend = EverythingNative.Backend;
+            backend.Reset();
 
-            EverythingNative.Everything_SetSearchW(SearchText ?? string.Empty);
-            EverythingNative.Everything_SetMatchPath(MatchPath);
-            EverythingNative.Everything_SetMatchCase(MatchCase);
-            EverythingNative.Everything_SetMatchWholeWord(MatchWholeWord);
-            EverythingNative.Everything_SetRegex(Regex);
-            EverythingNative.Everything_SetMax(Max);
-            EverythingNative.Everything_SetOffset(Offset);
-            EverythingNative.Everything_SetSort((uint)Sort);
-            EverythingNative.Everything_SetRequestFlags((uint)RequestFlags);
+            backend.SetSearch(SearchText ?? string.Empty);
+            backend.SetMatchPath(MatchPath);
+            backend.SetMatchCase(MatchCase);
+            backend.SetMatchWholeWord(MatchWholeWord);
+            backend.SetRegex(Regex);
+            backend.SetMax(Max);
+            backend.SetOffset(Offset);
+            backend.SetSort((uint)Sort);
+            backend.SetRequestFlags((uint)RequestFlags);
 
-            if (!EverythingNative.Everything_QueryW(true))
+            if (!backend.Query(true))
             {
-                LastError = (EverythingError)EverythingNative.Everything_GetLastError();
+                LastError = (EverythingError)backend.LastError;
                 throw new InvalidOperationException(
-                    "Everything 查询失败：" + LastError + "（请确认 Everything 已在后台运行）。", null);
+                    "Everything 查询失败：" + LastError + "（" + DescribeBackend() + "）。", null);
             }
 
             LastError = EverythingError.Ok;
-            TotalResults = EverythingNative.Everything_GetTotResults();
-            NumResults = EverythingNative.Everything_GetNumResults();
+            TotalResults = backend.TotalResults;
+            NumResults = backend.NumResults;
 
             var results = new List<EverythingResult>((int)Math.Min(NumResults, 8192u));
             for (uint i = 0; i < NumResults; i++)
-                results.Add(ReadResult(i));
+                results.Add(ReadResult(backend, i));
             return results;
         }
 
@@ -101,54 +104,54 @@ namespace Lib.Everything
             }
         }
 
-        private EverythingResult ReadResult(uint index)
+        private EverythingResult ReadResult(IEverythingBackend backend, uint index)
         {
             var r = new EverythingResult { Index = index };
 
-            r.FileName = EverythingNative.PtrToStringUni(EverythingNative.Everything_GetResultFileNameW(index));
-            r.Path = EverythingNative.PtrToStringUni(EverythingNative.Everything_GetResultPathW(index));
-            r.FullPath = GetFullPath(index);
-            r.Extension = EverythingNative.PtrToStringUni(EverythingNative.Everything_GetResultExtensionW(index));
-            r.FileListFileName = EverythingNative.PtrToStringUni(EverythingNative.Everything_GetResultFileListFileNameW(index));
+            r.FileName = backend.ResultFileName(index);
+            r.Path = backend.ResultPath(index);
+            r.FullPath = GetFullPath(backend, index);
+            r.Extension = backend.ResultExtension(index);
+            r.FileListFileName = backend.ResultFileListFileName(index);
 
             if ((RequestFlags & EverythingRequestFlags.Size) != 0 &&
-                EverythingNative.Everything_GetResultSize(index, out long size))
+                backend.TryResultSize(index, out long size))
             {
                 r.Size = size;
             }
 
-            r.Attributes = EverythingNative.Everything_GetResultAttributes(index);
-            r.RunCount = EverythingNative.Everything_GetResultRunCount(index);
-            r.IsVolume = EverythingNative.Everything_IsVolumeResult(index);
-            r.IsFolder = EverythingNative.Everything_IsFolderResult(index);
-            r.IsFile = EverythingNative.Everything_IsFileResult(index);
+            r.Attributes = backend.ResultAttributes(index);
+            r.RunCount = backend.ResultRunCount(index);
+            r.IsVolume = backend.IsVolumeResult(index);
+            r.IsFolder = backend.IsFolderResult(index);
+            r.IsFile = backend.IsFileResult(index);
 
             if ((RequestFlags & EverythingRequestFlags.DateCreated) != 0 &&
-                EverythingNative.Everything_GetResultDateCreated(index, out long created))
+                backend.TryResultDateCreated(index, out long created))
             {
                 r.DateCreated = SafeFileTime(created);
             }
 
             if ((RequestFlags & EverythingRequestFlags.DateModified) != 0 &&
-                EverythingNative.Everything_GetResultDateModified(index, out long modified))
+                backend.TryResultDateModified(index, out long modified))
             {
                 r.DateModified = SafeFileTime(modified);
             }
 
             if ((RequestFlags & EverythingRequestFlags.DateAccessed) != 0 &&
-                EverythingNative.Everything_GetResultDateAccessed(index, out long accessed))
+                backend.TryResultDateAccessed(index, out long accessed))
             {
                 r.DateAccessed = SafeFileTime(accessed);
             }
 
             if ((RequestFlags & EverythingRequestFlags.DateRun) != 0 &&
-                EverythingNative.Everything_GetResultDateRun(index, out long run))
+                backend.TryResultDateRun(index, out long run))
             {
                 r.DateRun = SafeFileTime(run);
             }
 
             if ((RequestFlags & EverythingRequestFlags.DateRecentlyChanged) != 0 &&
-                EverythingNative.Everything_GetResultDateRecentlyChanged(index, out long changed))
+                backend.TryResultDateRecentlyChanged(index, out long changed))
             {
                 r.DateRecentlyChanged = SafeFileTime(changed);
             }
@@ -168,47 +171,60 @@ namespace Lib.Everything
             catch { return null; }
         }
 
-        private static string GetFullPath(uint index)
+        private static string GetFullPath(IEverythingBackend backend, uint index)
         {
             // 先用固定缓冲区取，不足时按实际需要的字符数扩容重取。
             var buf = new StringBuilder(DefaultBufferSize);
-            uint needed = EverythingNative.Everything_GetResultFullPathNameW(index, buf, (uint)buf.Capacity);
+            uint needed = backend.ResultFullPathName(index, buf, (uint)buf.Capacity);
             if (needed > buf.Capacity)
             {
                 buf = new StringBuilder((int)needed);
-                EverythingNative.Everything_GetResultFullPathNameW(index, buf, (uint)buf.Capacity);
+                backend.ResultFullPathName(index, buf, (uint)buf.Capacity);
             }
             return buf.ToString();
         }
 
-        /// <summary>Everything SDK 版本号，如 1.4.1.1005。</summary>
+        /// <summary>Everything SDK 版本号，如 1.4.1.1005；POSIX 后端返回本 SDK 版本。</summary>
         public static Version GetVersion()
         {
+            IEverythingBackend backend = EverythingNative.Backend;
             return new Version(
-                (int)EverythingNative.Everything_GetMajorVersion(),
-                (int)EverythingNative.Everything_GetMinorVersion(),
-                (int)EverythingNative.Everything_GetRevision(),
-                (int)EverythingNative.Everything_GetBuildNumber());
+                (int)backend.MajorVersion,
+                (int)backend.MinorVersion,
+                (int)backend.Revision,
+                (int)backend.BuildNumber);
         }
 
-        /// <summary>目标机器类型，由当前加载的 Everything 原生库决定。</summary>
+        /// <summary>目标机器类型，由当前加载的 Everything 原生库或运行平台决定。</summary>
         public static EverythingTargetMachine GetTargetMachine()
         {
-            return (EverythingTargetMachine)EverythingNative.Everything_GetTargetMachine();
+            return (EverythingTargetMachine)EverythingNative.Backend.TargetMachine;
         }
 
-        /// <summary>是否已加载 Everything 索引数据库。</summary>
+        /// <summary>是否已加载 Everything 索引数据库。POSIX 上表示 locate 数据库是否存在。</summary>
         public static bool IsDBLoaded()
         {
-            return EverythingNative.Everything_IsDBLoaded();
+            return EverythingNative.Backend.IsDBLoaded();
+        }
+
+        /// <summary>实际使用的后端名称：Windows 为 "Everything"，POSIX 为 "locate"/"find"/"scan"。</summary>
+        public static string GetBackendName()
+        {
+            return EverythingNative.Backend.Name;
         }
 
         /// <summary>
-        /// 检测 Everything.exe 进程是否正在运行。
-        /// 比 IsDBLoaded 更可靠，不依赖 SDK 初始化状态。
+        /// 检测搜索后端是否可用。
+        /// Windows 上检查 Everything.exe 进程；POSIX 上检查 locate 数据库或 find 可执行文件。
         /// </summary>
         public static bool IsEverythingRunning()
         {
+#if !NETFRAMEWORK
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return EverythingNative.Backend.IsBackendAvailable(out _);
+            }
+#endif
             try
             {
                 var procs = System.Diagnostics.Process.GetProcessesByName("Everything");
@@ -220,10 +236,22 @@ namespace Lib.Everything
             }
         }
 
+        private static string DescribeBackend()
+        {
+            try
+            {
+                return "当前后端：" + EverythingNative.Backend.Name;
+            }
+            catch
+            {
+                return "后端不可用";
+            }
+        }
+
         public void Dispose()
         {
-            // 每次 Query 前已 Reset，这里仅释放 SDK 全局状态。
-            EverythingNative.Everything_CleanUp();
+            // 每次 Query 前已 Reset，这里仅释放后端持有的临时状态。
+            EverythingNative.Backend.CleanUp();
         }
     }
 }

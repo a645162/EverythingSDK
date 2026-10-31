@@ -138,9 +138,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="src\EverythingBackend.cs" />
     <Compile Include="src\EverythingClient.cs" />
     <Compile Include="src\EverythingEnums.cs" />
     <Compile Include="src\EverythingNative.cs" />
+    <Compile Include="src\EverythingNativePosix.cs" />
+    <Compile Include="src\EverythingNativePosixBackend.cs" />
+    <Compile Include="src\EverythingNativePosixEntry.cs" />
+    <Compile Include="src\EverythingNativePosixQuery.cs" />
+    <Compile Include="src\EverythingNativeWindows.cs" />
     <Compile Include="src\EverythingResult.cs" />
     <Compile Include="src\Properties\AssemblyInfo.cs" />
   </ItemGroup>

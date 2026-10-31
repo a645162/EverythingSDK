@@ -75,6 +75,7 @@ namespace Lib.Everything
     {
         X86 = 1,
         X64 = 2,
-        Arm = 3
+        Arm = 3,
+        Arm64 = 4
     }
 }
