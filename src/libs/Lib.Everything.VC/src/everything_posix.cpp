@@ -3,7 +3,7 @@
  * Brief: Everything SDK 的 POSIX 实现：以 plocate/locate、find 或进程内扫描
  *        提供与 Windows Everything 相同的客户端 API。
  * Author: Haomin Kong
- * Email: konghm@beim.com.cn / a645162@163.com
+ * Email: a645162@163.com
  * Created: 2026-10-31
  *
  * 设计说明：

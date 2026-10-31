@@ -1,3 +1,11 @@
+/*
+ * File: Main.cpp
+ * Brief: Main.
+ * Author: Haomin Kong
+ * Email: a645162@163.com
+ * Created: 2026-07-31
+ */
+
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif

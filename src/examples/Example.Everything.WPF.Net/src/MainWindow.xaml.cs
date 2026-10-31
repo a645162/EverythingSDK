@@ -1,3 +1,9 @@
+// File: MainWindow.xaml.cs
+// Brief: MainWindow.xaml.
+// Author: Haomin Kong
+// Email: a645162@163.com
+// Created: 2026-07-31
+
 using Lib.Everything;
 using System;
 using System.Collections.Generic;

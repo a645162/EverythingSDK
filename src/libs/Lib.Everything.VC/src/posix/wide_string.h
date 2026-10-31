@@ -2,7 +2,7 @@
  * File: libs/EverythingSDK/src/libs/Lib.Everything.VC/src/posix/wide_string.h
  * Brief: UTF-8 与宽字符串互转（POSIX 后端内部使用，保持 C++11）。
  * Author: Haomin Kong
- * Email: konghm@beim.com.cn / a645162@163.com
+ * Email: a645162@163.com
  * Created: 2026-10-31
  */
 

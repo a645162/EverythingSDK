@@ -1,3 +1,11 @@
+<!--
+ * File: README.md
+ * Brief: Everything SDK.
+ * Author: Haomin Kong
+ * Email: a645162@163.com
+ * Created: 2026-07-31
+-->
+
 # Everything SDK
 
 This directory contains a repackaged Everything SDK workspace with managed wrappers, a native-friendly C++ wrapper, desktop examples, and tests.

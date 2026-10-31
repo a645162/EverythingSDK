@@ -1,3 +1,9 @@
+# File: src/examples/Example.Everything.Win32.VC/CMakeLists.txt
+# Brief: CMake build configuration.
+# Author: Haomin Kong
+# Email: a645162@163.com
+# Created: 2026-07-31
+
 add_executable(Example.Everything.Win32.VC WIN32
     src/Main.cpp
 )

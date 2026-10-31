@@ -2,7 +2,7 @@
  * File: libs/EverythingSDK/src/libs/Lib.Everything.VC/src/posix/file_metadata.h
  * Brief: POSIX 文件元数据读取（大小、时间、类型、权限位）。
  * Author: Haomin Kong
- * Email: konghm@beim.com.cn / a645162@163.com
+ * Email: a645162@163.com
  * Created: 2026-10-31
  */
 

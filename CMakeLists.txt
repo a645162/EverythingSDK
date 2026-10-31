@@ -1,3 +1,9 @@
+# File: CMakeLists.txt
+# Brief: CMake build configuration.
+# Author: Haomin Kong
+# Email: a645162@163.com
+# Created: 2026-07-31
+
 cmake_minimum_required(VERSION 3.24)
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/everythingsdk_version.cmake")

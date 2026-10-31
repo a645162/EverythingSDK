@@ -1,3 +1,9 @@
+# File: everythingsdk_version.cmake
+# Brief: Everythingsdk version.
+# Author: Haomin Kong
+# Email: a645162@163.com
+# Created: 2026-08-04
+
 function(everythingsdk_load_version_from_props VERSION_PROPS)
   file(READ "${VERSION_PROPS}" _everythingsdk_version_props)
 

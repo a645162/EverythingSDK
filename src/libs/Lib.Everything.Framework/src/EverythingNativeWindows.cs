@@ -1,7 +1,7 @@
 // File: libs/EverythingSDK/src/libs/Lib.Everything.Framework/src/EverythingNativeWindows.cs
 // Brief: Windows 后端：动态加载 Everything*.dll 并绑定 Everything C SDK 导出函数。
 // Author: Haomin Kong
-// Email: konghm@beim.com.cn / a645162@163.com
+// Email: a645162@163.com
 // Created: 2026-10-31
 
 using System;

@@ -1,3 +1,9 @@
+// File: EverythingNativeTests.cs
+// Brief: EverythingNativeTests.
+// Author: Haomin Kong
+// Email: a645162@163.com
+// Created: 2026-07-31
+
 using Lib.Everything;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;

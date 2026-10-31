@@ -1,3 +1,9 @@
+// File: EverythingEnums.cs
+// Brief: EverythingEnums.
+// Author: Haomin Kong
+// Email: a645162@163.com
+// Created: 2026-07-31
+
 using System;
 
 namespace Lib.Everything

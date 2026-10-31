@@ -1,3 +1,11 @@
+/*
+ * File: Everything.cpp
+ * Brief: Everything.
+ * Author: Haomin Kong
+ * Email: a645162@163.com
+ * Created: 2026-07-31
+ */
+
 #include "Lib/Everything/Everything.h"
 
 #ifndef WIN32_LEAN_AND_MEAN

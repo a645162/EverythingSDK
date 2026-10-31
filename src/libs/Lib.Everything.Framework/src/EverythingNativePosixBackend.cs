@@ -1,7 +1,7 @@
 // File: EverythingNativePosixBackend.cs
 // Brief: POSIX 后端探测与候选路径枚举（locate → fd → find → 进程内扫描）。
 // Author: Haomin Kong
-// Email: konghm@beim.com.cn / a645162@163.com
+// Email: a645162@163.com
 // Created: 2026-10-31
 //
 // 说明：该文件仅在非 .NET Framework 目标中参与编译

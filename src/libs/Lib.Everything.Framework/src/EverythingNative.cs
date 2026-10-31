@@ -1,8 +1,8 @@
 // File: libs/EverythingSDK/src/libs/Lib.Everything.Framework/src/EverythingNative.cs
 // Brief: 托管后端入口：按运行平台选择 Windows 原生库或 POSIX locate/find 后端。
 // Author: Haomin Kong
-// Email: konghm@beim.com.cn / a645162@163.com
-// Created: 2026-10-31
+// Email: a645162@163.com
+// Created: 2026-07-31
 
 using System;
 using System.Runtime.InteropServices;

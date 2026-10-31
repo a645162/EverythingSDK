@@ -2,7 +2,7 @@
  * File: libs/EverythingSDK/src/libs/Lib.Everything.VC/src/posix/search_backend.h
  * Brief: POSIX 搜索后端探测与候选路径枚举（plocate/locate → fd → find → 进程内扫描）。
  * Author: Haomin Kong
- * Email: konghm@beim.com.cn / a645162@163.com
+ * Email: a645162@163.com
  * Created: 2026-10-31
  */
 

@@ -1,3 +1,11 @@
+<!--
+ * File: README.zh-cn.md
+ * Brief: Everything SDK.
+ * Author: Haomin Kong
+ * Email: a645162@163.com
+ * Created: 2026-07-31
+-->
+
 # Everything SDK
 
 这里整理的是一个重新组织过的 Everything SDK 工作区，包含托管封装、适合原生项目复用的 C++ 封装、桌面示例和测试项目。

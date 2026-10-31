@@ -2,7 +2,7 @@
  * File: libs/EverythingSDK/src/libs/Lib.Everything.VC/src/posix/process_runner.cpp
  * Brief: POSIX 子进程执行器实现。
  * Author: Haomin Kong
- * Email: konghm@beim.com.cn / a645162@163.com
+ * Email: a645162@163.com
  * Created: 2026-10-31
  */
 

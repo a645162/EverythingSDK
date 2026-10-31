@@ -1,3 +1,9 @@
+// File: EverythingClient.cs
+// Brief: EverythingClient.
+// Author: Haomin Kong
+// Email: a645162@163.com
+// Created: 2026-07-31
+
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;

@@ -2,7 +2,7 @@
  * File: libs/EverythingSDK/tests/Test.Everything.VC/main.cpp
  * Brief: POSIX 后端端到端测试：语法、排序、分页、元数据与后端名称。
  * Author: Haomin Kong
- * Email: konghm@beim.com.cn / a645162@163.com
+ * Email: a645162@163.com
  * Created: 2026-10-31
  */
 

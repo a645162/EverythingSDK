@@ -2,7 +2,7 @@
  * File: libs/EverythingSDK/src/libs/Lib.Everything.VC/src/posix/search_query.cpp
  * Brief: Everything 搜索语法子集的解析与匹配实现。
  * Author: Haomin Kong
- * Email: konghm@beim.com.cn / a645162@163.com
+ * Email: a645162@163.com
  * Created: 2026-10-31
  */
 

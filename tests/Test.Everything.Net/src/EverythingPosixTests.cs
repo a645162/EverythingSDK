@@ -1,7 +1,7 @@
 // File: libs/EverythingSDK/tests/Test.Everything.Net/src/EverythingPosixTests.cs
 // Brief: POSIX 后端测试：强制 scan 后端，覆盖语法、排序、分页与元数据。
 // Author: Haomin Kong
-// Email: konghm@beim.com.cn / a645162@163.com
+// Email: a645162@163.com
 // Created: 2026-10-31
 
 using Lib.Everything;

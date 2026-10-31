@@ -1,7 +1,7 @@
 // File: EverythingNativePosixQuery.cs
 // Brief: POSIX 后端查询语法：解析、匹配与通配符。
 // Author: Haomin Kong
-// Email: konghm@beim.com.cn / a645162@163.com
+// Email: a645162@163.com
 // Created: 2026-10-31
 //
 // 说明：该文件仅在非 .NET Framework 目标中参与编译

@@ -1,7 +1,7 @@
 // File: EverythingNativePosix.cs
 // Brief: POSIX 后端核心：搜索状态、查询流程与结果读取。
 // Author: Haomin Kong
-// Email: konghm@beim.com.cn / a645162@163.com
+// Email: a645162@163.com
 // Created: 2026-10-31
 //
 // 说明：该文件仅在非 .NET Framework 目标中参与编译
