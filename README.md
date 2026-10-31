@@ -26,6 +26,7 @@ src/
 tests/
   Test.Everything.Framework/
   Test.Everything.Net/
+  Test.Everything.VC/
 ```
 
 ## Libraries
@@ -33,15 +34,18 @@ tests/
 - `Lib.Everything.Framework`
   - .NET Framework wrapper.
   - Keeps the public namespace and assembly name as `Lib.Everything` for compatibility.
+  - Targets `net48`, so it remains Windows-only.
 - `Lib.Everything.Net`
   - Multi-target .NET wrapper.
-  - Current targets are `net6.0`, `net8.0`, and `net10.0`.
+  - Current targets are `netstandard2.0`, `net6.0`, `net8.0`, and `net10.0`.
   - Keeps the public namespace and assembly name as `Lib.Everything`.
+  - On Linux/macOS it uses the portable POSIX backend described below.
 - `Lib.Everything.VC`
   - C++ wrapper for native and VC/Win32 consumers.
   - Minimum language level is C++11.
   - Public header: `src/libs/Lib.Everything.VC/include/Lib/Everything/Everything.h`.
-  - Dynamically loads the matching native DLL at runtime.
+  - On Windows it dynamically loads the matching native DLL at runtime.
+  - On POSIX it compiles `src/everything_posix.cpp` plus `src/posix/` instead of the DLL binding.
 
 ## .NET usage
 
@@ -101,6 +105,7 @@ foreach (var item in client.Query())
 - `EverythingClient.GetTargetMachine()`
 - `EverythingClient.IsDBLoaded()`
 - `EverythingClient.IsEverythingRunning()`
+- `EverythingClient.GetBackendName()`
 
 ### Runtime note
 
@@ -135,6 +140,102 @@ The VC wrapper looks for the proper `Everything*.dll` in this order:
 3. `<exe-dir>/native`
 4. normal Windows DLL search path
 
+## Linux and other POSIX systems
+
+Everything itself is Windows-only and ships no `Everything*.dll` for POSIX, so both
+wrappers fall back to a portable backend on Linux and macOS. The public API is
+unchanged: the same `EverythingClient`, the same properties, the same
+`EverythingResult` fields.
+
+### Backend selection
+
+The backend is picked on every query, in this order:
+
+1. `plocate` or `locate`, but only when a locate database actually exists.
+2. `fd` (or `fdfind`, the binary name of the `fd-find` package on Debian/Ubuntu).
+3. `find`.
+4. In-process directory scan (always available, no external dependency).
+
+An environment variable can pin the choice instead, and an unavailable forced
+backend still falls back to the next one in the list.
+
+The selected backend can be reported for diagnostics:
+
+```csharp
+Console.WriteLine(EverythingClient.GetBackendName()); // "locate" / "fd" / "find" / "scan"
+```
+
+```cpp
+std::wcout << Lib::Everything::EverythingClient::GetBackendName() << L"\n";
+```
+
+On Windows the same call returns `"Everything"`.
+
+### Environment variables
+
+| Variable | Meaning |
+| --- | --- |
+| `EVERYTHING_SDK_SEARCH_BACKEND` | Pin `locate`, `fd`, `find`, or `scan`. Unknown values are ignored. |
+| `EVERYTHING_SDK_LOCATE_DB` | Extra locate database path, tried before the standard locations. |
+| `EVERYTHING_SDK_SEARCH_ROOTS` | Colon-separated search roots. Defaults to `$HOME`; use `/` to search everything. |
+| `EVERYTHING_SDK_MAX_CANDIDATES` | Hard cap on collected candidate paths (default 200000), so a scan of `/` cannot exhaust memory. |
+
+Roots are matched on path-component boundaries, so `/data` never matches `/database`.
+
+### Supported query syntax
+
+The POSIX backend implements the commonly used subset of the Everything grammar:
+
+- `ext:png;jpg` — extension set (case-insensitive unless `MatchCase`).
+- `ext:png;!jpg` style negation via `!term`.
+- `path:"Program Files"` — substring match on the full path.
+- `file:"IMG_0001"` — substring match on the file name.
+- `"quoted phrase"` — grouped phrase, spaces included.
+- `*.png`, `IMG_????.jpg` — `*` and `?` wildcards, matched against the whole
+  name (or whole path when `MatchPath` is set). `[` and `]` are literal.
+- Bare words — substring match, honouring `MatchPath`, `MatchCase`, and
+  `MatchWholeWord`.
+- `Regex` — ECMAScript regex; an invalid pattern degrades to literal matching
+  instead of failing the whole query.
+
+Advanced Everything filters without a POSIX equivalent (`size:`, `dm:`,
+`rc:`, `content:`, file lists, `$` macros) are treated as plain text.
+
+### Behaviour differences from Everything
+
+- There is no live index. `locate` results reflect the last `updatedb` run;
+  `fd` and `find` walk the roots on every query.
+- `fd` respects its own defaults except that hidden files are included and ignore
+  files are disabled; both are overridden explicitly so results match Everything.
+- `GetVersion()` returns this SDK's own version, because there is no Everything
+  service to ask. Use `GetBackendName()` for the actual backend.
+- `IsEverythingRunning()` reports whether a usable backend exists, not whether
+  a daemon is running. `IsDBLoaded()` reports whether a locate database was found.
+- `DateCreated` comes from Linux `statx` birth time. Filesystems without birth
+  time fall back to `ctime`, which is an approximation (metadata change time).
+- `RunCount`, `DateRun`, `DateRecentlyChanged`, and file-list results are always
+  empty. `IsVolumeResult()` is always `false`.
+- `Attributes` exposes the POSIX mode bits, not Windows file attributes.
+- Like the Windows wrapper, a client instance is not thread-safe.
+
+### Build and test on POSIX
+
+```bash
+cmake -S . -B build -DEVERYTHINGSDK_BUILD_TESTS=ON \
+      -DEVERYTHINGSDK_BUILD_WIN32_EXAMPLE=OFF -DCMAKE_BUILD_TYPE=Debug
+cmake --build build -j
+ctest --test-dir build --output-on-failure
+```
+
+```bash
+dotnet build src/libs/Lib.Everything.Net/Lib.Everything.Net.csproj -c Debug
+dotnet test tests/Test.Everything.Net/Test.Everything.Net.csproj -c Debug
+```
+
+`tests/Test.Everything.VC` only exists on non-Windows builds; the POSIX tests
+force `EVERYTHING_SDK_SEARCH_BACKEND=scan` so they never depend on the contents
+of the machine's locate database.
+
 ## Build
 
 ### Managed projects
@@ -148,6 +249,7 @@ dotnet test .\tests\Test.Everything.Net\Test.Everything.Net.csproj -c Debug
 Notes:
 
 - The solution contains `net10.0` targets. Building those targets requires a .NET SDK that supports `.NET 10`.
+- `Lib.Everything.Net` also produces a `netstandard2.0` assembly for older consumers; the test project runs on `net8.0`.
 - `dotnet msbuild` is not suitable for the VC projects in this solution. Use Visual Studio or `MSBuild.exe` for `.vcxproj` builds.
 
 If you only want the managed wrapper, you can build the individual project directly:
