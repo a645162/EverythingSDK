@@ -192,6 +192,17 @@ public:
   // 实际使用的搜索后端名称。Windows 返回 "Everything"；
   // POSIX 返回 "locate" / "fd" / "find" / "scan"（见 README 的 Linux 章节）。
   static std::wstring GetBackendName();
+
+  // 本平台可用的搜索后端列表。Windows 只有 "Everything"；
+  // POSIX 为 locate/fd/find/scan 中本机实际可用的子集（scan 始终可用）。
+  static std::vector<std::wstring> AvailableBackends();
+
+  // 手动指定后端，下一次 Query() 生效；空字符串表示自动（内置优先级）。
+  // Windows 只接受空字符串或 "Everything"，其它值会被忽略。
+  static void SetPreferredBackend(const std::wstring &name);
+
+  // 当前手动指定的后端；空字符串表示自动。
+  static std::wstring GetPreferredBackend();
 };
 
 std::wstring ToWideString(EverythingError error);

@@ -169,6 +169,30 @@ std::wcout << Lib::Everything::EverythingClient::GetBackendName() << L"\n";
 
 Windows 上同一个调用返回 `"Everything"`。
 
+### 在代码里列出并固定后端
+
+两个封装的调用完全对称，界面可以直接据此做一个后端选择器，
+不需要去读环境变量：
+
+```csharp
+string[] backends = EverythingClient.AvailableBackends(); // 例如 { "locate", "fd", "find", "scan" }
+EverythingClient.SetPreferredBackend("fd");               // 手动指定
+EverythingClient.SetPreferredBackend(string.Empty);       // 恢复自动
+Console.WriteLine(EverythingClient.GetBackendName());     // 当前真正生效的后端
+```
+
+```cpp
+for (const std::wstring& name : Lib::Everything::EverythingClient::AvailableBackends()) {
+    std::wcout << name << L"\n";
+}
+Lib::Everything::EverythingClient::SetPreferredBackend(L"fd");
+Lib::Everything::EverythingClient::SetPreferredBackend(L""); // 自动
+```
+
+优先级：**代码里的显式偏好 > `EVERYTHING_SDK_SEARCH_BACKEND` > 自动探测**。
+指定的后端本机没装时不会直接失败，而是按固定顺序回退；`scan` 永远可用，
+因此 `AvailableBackends()` 至少有一项。
+
 ### 环境变量
 
 | 变量 | 含义 |

@@ -11,6 +11,7 @@
 #include "process_runner.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cstdlib>
 #include <cstring>
 
@@ -525,6 +526,117 @@ CollectFromScan(const Lib::Everything::Posix::SearchQuery &query,
   }
   return collection;
 }
+
+// 手动指定后端的存放位置：-1 表示自动。搜索跑在调用方的工作线程上，
+// 因此用原子变量而不是 std::string，避免读写竞争。
+std::atomic<int> &PreferenceIndex() {
+  static std::atomic<int> index{-1};
+  return index;
+}
+
+// 构造指定后端的探测结果。executable 为空表示该后端在本机不可用；
+// Scan 不依赖外部可执行文件，因此永远可用。
+Lib::Everything::Posix::BackendInfo
+ResolveBackendKind(const Lib::Everything::Posix::BackendKind kind) {
+  using Lib::Everything::Posix::BackendInfo;
+  using Lib::Everything::Posix::BackendKind;
+
+  BackendInfo info;
+  info.kind = kind;
+
+  switch (kind) {
+  case BackendKind::Locate: {
+    const std::string database = FirstExistingDatabase();
+    if (database.empty()) {
+      info.reason = "locate database missing";
+      return info;
+    }
+
+    const std::string plocate =
+        Lib::Everything::Posix::FindExecutable("plocate");
+    if (!plocate.empty()) {
+      info.executable = plocate;
+      info.database_loaded = true;
+      info.reason = "plocate database " + database;
+      return info;
+    }
+
+    const std::string locate = Lib::Everything::Posix::FindExecutable("locate");
+    if (!locate.empty()) {
+      info.executable = locate;
+      info.database_loaded = true;
+      info.reason = "locate database " + database;
+      return info;
+    }
+
+    info.reason = "locate executable missing";
+    return info;
+  }
+  case BackendKind::Fd: {
+    // Debian/Ubuntu 的包名叫 fd-find，可执行文件是 fdfind，两个名字都要探测。
+    const std::string fd = Lib::Everything::Posix::FindExecutable("fd");
+    const std::string fdfind = Lib::Everything::Posix::FindExecutable("fdfind");
+    info.executable = fd.empty() ? fdfind : fd;
+    info.reason = info.executable.empty() ? "fd executable missing"
+                                          : "fd executable " + info.executable;
+    return info;
+  }
+  case BackendKind::Find: {
+    info.executable = Lib::Everything::Posix::FindExecutable("find");
+    info.reason = info.executable.empty()
+                      ? "find executable missing"
+                      : "find executable " + info.executable;
+    return info;
+  }
+  case BackendKind::Scan:
+    info.reason = "in-process scan";
+    return info;
+  }
+
+  return info;
+}
+
+bool IsAvailable(const Lib::Everything::Posix::BackendInfo &info) {
+  using Lib::Everything::Posix::BackendKind;
+  if (info.kind == BackendKind::Scan) {
+    return true;
+  }
+  return !info.executable.empty();
+}
+
+// 显式指定某个后端后，不可用时要按什么顺序回退。
+// 指定 fd/find 时跳过 locate：索引可能过期，用户点名了就别用旧快照。
+std::vector<Lib::Everything::Posix::BackendKind>
+FallbackOrder(const Lib::Everything::Posix::BackendKind forced) {
+  using Lib::Everything::Posix::BackendKind;
+  switch (forced) {
+  case BackendKind::Locate:
+    return {BackendKind::Locate, BackendKind::Fd, BackendKind::Find,
+            BackendKind::Scan};
+  case BackendKind::Fd:
+    return {BackendKind::Fd, BackendKind::Find, BackendKind::Scan};
+  case BackendKind::Find:
+    return {BackendKind::Find, BackendKind::Scan};
+  case BackendKind::Scan:
+    return {BackendKind::Scan};
+  }
+  return {BackendKind::Locate, BackendKind::Fd, BackendKind::Find,
+          BackendKind::Scan};
+}
+
+Lib::Everything::Posix::BackendInfo FirstAvailableFrom(
+    const std::vector<Lib::Everything::Posix::BackendKind> &order) {
+  for (const Lib::Everything::Posix::BackendKind candidate : order) {
+    const Lib::Everything::Posix::BackendInfo info =
+        ResolveBackendKind(candidate);
+    if (IsAvailable(info)) {
+      return info;
+    }
+  }
+
+  // 理论上到不了这里：FallbackOrder 的最后一项一定是 Scan。
+  return ResolveBackendKind(Lib::Everything::Posix::BackendKind::Scan);
+}
 } // namespace
 
 namespace Lib {
@@ -545,66 +657,81 @@ std::string BackendName(const BackendKind kind) {
 }
 
 BackendInfo DetectBackend() {
-  BackendInfo info;
-
-  const std::string override_backend =
-      EnvironmentValue("EVERYTHING_SDK_SEARCH_BACKEND");
-  if (override_backend == "scan") {
-    info.kind = BackendKind::Scan;
-    info.reason = "forced by EVERYTHING_SDK_SEARCH_BACKEND";
-    return info;
+  // 1) 显式 API 偏好优先，便于界面让用户手动指定后端。
+  const int preferred = PreferenceIndex().load(std::memory_order_relaxed);
+  if (preferred >= 0) {
+    BackendInfo forced =
+        FirstAvailableFrom(FallbackOrder(static_cast<BackendKind>(preferred)));
+    forced.reason += " (preferred)";
+    return forced;
   }
 
-  const bool force_find = override_backend == "find";
-  const bool force_fd = override_backend == "fd";
-  // locate 索引可能过期，显式指定 fd/find 时应跳过它。
-  const bool skip_locate = force_find || force_fd;
+  // 2) 环境变量，保留无条件脚本化能力。
+  BackendKind forced_kind{};
+  if (TryParseBackendName(EnvironmentValue("EVERYTHING_SDK_SEARCH_BACKEND"),
+                          &forced_kind)) {
+    BackendInfo forced = FirstAvailableFrom(FallbackOrder(forced_kind));
+    forced.reason += " (EVERYTHING_SDK_SEARCH_BACKEND)";
+    return forced;
+  }
 
-  const std::string database = FirstExistingDatabase();
-  const std::string plocate = FindExecutable("plocate");
-  const std::string locate = FindExecutable("locate");
+  // 3) 自动：locate → fd → find → scan。
+  return FirstAvailableFrom(FallbackOrder(BackendKind::Locate));
+}
 
-  if (!skip_locate && !database.empty()) {
-    if (!plocate.empty()) {
-      info.kind = BackendKind::Locate;
-      info.executable = plocate;
-      info.database_loaded = true;
-      info.reason = "plocate database " + database;
-      return info;
+bool TryParseBackendName(const std::string &name, BackendKind *kind) {
+  BackendKind parsed{};
+  if (name == "locate") {
+    parsed = BackendKind::Locate;
+  } else if (name == "fd") {
+    parsed = BackendKind::Fd;
+  } else if (name == "find") {
+    parsed = BackendKind::Find;
+  } else if (name == "scan") {
+    parsed = BackendKind::Scan;
+  } else {
+    return false;
+  }
+
+  if (kind != nullptr) {
+    *kind = parsed;
+  }
+  return true;
+}
+
+std::vector<BackendKind> AvailableBackends() {
+  std::vector<BackendKind> backends;
+  const BackendKind candidates[] = {BackendKind::Locate, BackendKind::Fd,
+                                    BackendKind::Find, BackendKind::Scan};
+  for (const BackendKind candidate : candidates) {
+    if (IsAvailable(ResolveBackendKind(candidate))) {
+      backends.push_back(candidate);
     }
-    if (!locate.empty()) {
-      info.kind = BackendKind::Locate;
-      info.executable = locate;
-      info.database_loaded = true;
-      info.reason = "locate database " + database;
-      return info;
-    }
+  }
+  return backends;
+}
+
+void SetBackendPreference(const std::string &name) {
+  BackendKind kind{};
+  if (name.empty()) {
+    PreferenceIndex().store(-1, std::memory_order_relaxed);
+    return;
   }
 
-  // fd 比 find 快得多，但不保证安装；Debian/Ubuntu 的包名叫 fd-find，
-  // 可执行文件是 fdfind，因此两个名字都要探测。
-  const std::string fd = FindExecutable("fd");
-  const std::string fdfind = FindExecutable("fdfind");
-  if (!force_find && (!fd.empty() || !fdfind.empty())) {
-    info.kind = BackendKind::Fd;
-    info.executable = fd.empty() ? fdfind : fd;
-    info.reason = "fd executable " + info.executable;
-    return info;
+  // 无法识别的名字不写入，避免把用户的输入变成「永远自动」而没有任何反馈；
+  // 调用方可用 BackendPreference() 确认是否真的生效。
+  if (!TryParseBackendName(name, &kind)) {
+    return;
   }
+  PreferenceIndex().store(static_cast<int>(kind), std::memory_order_relaxed);
+}
 
-  const std::string find = FindExecutable("find");
-  if (!find.empty()) {
-    info.kind = BackendKind::Find;
-    info.executable = find;
-    info.reason = database.empty() ? "locate database missing, fallback to find"
-                                   : "forced by EVERYTHING_SDK_SEARCH_BACKEND";
-    return info;
+std::string BackendPreference() {
+  const int preferred = PreferenceIndex().load(std::memory_order_relaxed);
+  if (preferred < 0) {
+    return {};
   }
-
-  info.kind = BackendKind::Scan;
-  info.reason =
-      "no locate database, fd or find executable, fallback to in-process scan";
-  return info;
+  return BackendName(static_cast<BackendKind>(preferred));
 }
 
 std::vector<std::string> DefaultSearchRoots() {

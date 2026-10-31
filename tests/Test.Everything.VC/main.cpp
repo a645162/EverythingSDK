@@ -161,6 +161,29 @@ int main() {
           "backend name should not be empty");
     Check(EverythingClient::IsEverythingRunning(),
           "POSIX backend should report available");
+
+    // 可用后端列表至少要包含永远可用的 scan。
+    const std::vector<std::wstring> available =
+        EverythingClient::AvailableBackends();
+    Check(!available.empty(), "available backend list must not be empty");
+    bool has_scan = false;
+    for (const std::wstring &name : available) {
+      if (name == L"scan") {
+        has_scan = true;
+      }
+    }
+    Check(has_scan, "available backends must always include scan");
+
+    // 手动指定后端：设置后应立即生效，清空后回到自动。
+    EverythingClient::SetPreferredBackend(L"find");
+    Check(EverythingClient::GetPreferredBackend() == L"find",
+          "preferred backend should be reported back");
+    Check(EverythingClient::GetBackendName() == L"find",
+          "preferred backend should be used by the next query");
+
+    EverythingClient::SetPreferredBackend(L"");
+    Check(EverythingClient::GetPreferredBackend().empty(),
+          "empty preference should mean automatic");
   }
 
   // fd 后端：可用时验证后端名称与实际结果，未安装则跳过。

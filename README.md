@@ -171,6 +171,31 @@ std::wcout << Lib::Everything::EverythingClient::GetBackendName() << L"\n";
 
 On Windows the same call returns `"Everything"`.
 
+### Listing and pinning backends from code
+
+Both wrappers expose the same three calls, so a UI can render a backend picker
+without shelling out or reading environment variables:
+
+```csharp
+string[] backends = EverythingClient.AvailableBackends(); // e.g. { "locate", "fd", "find", "scan" }
+EverythingClient.SetPreferredBackend("fd");               // pin
+EverythingClient.SetPreferredBackend(string.Empty);       // back to automatic
+Console.WriteLine(EverythingClient.GetBackendName());     // what is actually in use
+```
+
+```cpp
+for (const std::wstring& name : Lib::Everything::EverythingClient::AvailableBackends()) {
+    std::wcout << name << L"\n";
+}
+Lib::Everything::EverythingClient::SetPreferredBackend(L"fd");
+Lib::Everything::EverythingClient::SetPreferredBackend(L""); // automatic
+```
+
+Precedence is `explicit code preference` > `EVERYTHING_SDK_SEARCH_BACKEND` >
+automatic detection. A pinned backend that is not installed falls back in a
+fixed order instead of failing; `scan` is always available, so
+`AvailableBackends()` is never empty.
+
 ### Environment variables
 
 | Variable | Meaning |

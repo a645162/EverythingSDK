@@ -207,10 +207,28 @@ namespace Lib.Everything
             return EverythingNative.Backend.IsDBLoaded();
         }
 
-        /// <summary>实际使用的后端名称：Windows 为 "Everything"，POSIX 为 "locate"/"find"/"scan"。</summary>
+        /// <summary>实际使用的后端名称：Windows 为 "Everything"，POSIX 为 "locate"/"fd"/"find"/"scan"。</summary>
         public static string GetBackendName()
         {
             return EverythingNative.Backend.Name;
+        }
+
+        /// <summary>本平台可用的后端名称；Windows 只有 "Everything"，POSIX 至少含 "scan"。</summary>
+        public static string[] AvailableBackends()
+        {
+            return EverythingNative.Backend.AvailableBackends;
+        }
+
+        /// <summary>手动指定后端；空字符串表示自动。无法识别的名称会被忽略。</summary>
+        public static void SetPreferredBackend(string name)
+        {
+            EverythingNative.Backend.SetPreferredBackend(name);
+        }
+
+        /// <summary>当前手动指定的后端；空字符串表示自动。</summary>
+        public static string GetPreferredBackend()
+        {
+            return EverythingNative.Backend.PreferredBackend;
         }
 
         /// <summary>

@@ -22,6 +22,16 @@ namespace Lib.Everything
 
         public string Name => "Everything";
 
+        // Windows 上只有 Everything 一个后端，没有可切换的项。
+        public string[] AvailableBackends => new[] { "Everything" };
+
+        public string PreferredBackend => "Everything";
+
+        public void SetPreferredBackend(string name)
+        {
+            // 唯一后端没有「切换到别处」的语义，参数刻意忽略。
+        }
+
         public void Reset() => Native.Everything_Reset();
         public void CleanUp() => Native.Everything_CleanUp();
 

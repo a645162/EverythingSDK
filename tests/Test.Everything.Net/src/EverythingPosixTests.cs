@@ -162,6 +162,36 @@ namespace Test.Everything.Net
             Assert.IsTrue(EverythingClient.IsEverythingRunning());
         }
 
+        [TestMethod]
+        public void AvailableBackends_AlwaysContainsScan()
+        {
+            string[] backends = EverythingClient.AvailableBackends();
+
+            Assert.IsNotNull(backends);
+            Assert.IsTrue(backends.Length > 0);
+            CollectionAssert.Contains(backends, "scan");
+        }
+
+        [TestMethod]
+        public void PreferredBackend_ChangesActiveBackendAndCanBeCleared()
+        {
+            try
+            {
+                EverythingClient.SetPreferredBackend("find");
+
+                Assert.AreEqual("find", EverythingClient.GetPreferredBackend());
+                Assert.AreEqual("find", EverythingClient.GetBackendName());
+
+                EverythingClient.SetPreferredBackend(string.Empty);
+
+                Assert.AreEqual(string.Empty, EverythingClient.GetPreferredBackend());
+            }
+            finally
+            {
+                EverythingClient.SetPreferredBackend(string.Empty);
+            }
+        }
+
         private static bool Contains(IEnumerable<EverythingResult> results, string fileName)
         {
             foreach (EverythingResult result in results)

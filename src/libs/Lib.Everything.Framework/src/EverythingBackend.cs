@@ -17,6 +17,15 @@ namespace Lib.Everything
         /// <summary>后端名称，用于诊断信息（"Everything" / "locate" / "find" / "scan"）。</summary>
         string Name { get; }
 
+        /// <summary>本平台可用的后端名称；Windows 只有 "Everything"，POSIX 至少含 "scan"。</summary>
+        string[] AvailableBackends { get; }
+
+        /// <summary>手动指定的后端名称；空字符串表示自动（内置优先级）。</summary>
+        string PreferredBackend { get; }
+
+        /// <summary>手动指定后端；空字符串表示恢复自动。无法识别的名称会被忽略。</summary>
+        void SetPreferredBackend(string name);
+
         void Reset();
         void CleanUp();
 

@@ -598,6 +598,18 @@ bool EverythingClient::IsDBLoaded() {
 
 std::wstring EverythingClient::GetBackendName() { return L"Everything"; }
 
+std::vector<std::wstring> EverythingClient::AvailableBackends() {
+  // Windows 上只有 Everything 一个后端，没有可切换的项。
+  return {L"Everything"};
+}
+
+void EverythingClient::SetPreferredBackend(const std::wstring &name) {
+  // 唯一后端没有「切换到别处」的语义；非法值同样忽略。
+  (void)name;
+}
+
+std::wstring EverythingClient::GetPreferredBackend() { return L"Everything"; }
+
 bool EverythingClient::IsEverythingRunning() {
   HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
   if (snapshot == INVALID_HANDLE_VALUE) {

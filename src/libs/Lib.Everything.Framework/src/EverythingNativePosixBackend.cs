@@ -44,72 +44,204 @@ namespace Lib.Everything
                                 : "scan";
         }
 
+        private static readonly BackendKind[] AllBackends =
+        {
+            BackendKind.Locate,
+            BackendKind.Fd,
+            BackendKind.Find,
+            BackendKind.Scan
+        };
+
+        // 手动指定的后端：空字符串表示自动。搜索跑在调用方的工作线程上，
+        // 因此用 volatile 保证写入后其它线程能立刻看到新值。
+        private static volatile string preferredBackend = string.Empty;
+
+        private static string PreferredBackendName() => preferredBackend ?? string.Empty;
+
+        private static void SetPreferredBackendName(string name)
+        {
+            name = (name ?? string.Empty).Trim();
+            if (name.Length == 0)
+            {
+                preferredBackend = string.Empty;
+                return;
+            }
+
+            // 无法识别的名字不写入，避免把用户的输入静默变成「永远自动」。
+            BackendKind kind;
+            if (TryParseBackendName(name, out kind))
+            {
+                preferredBackend = BackendNameOf(kind);
+            }
+        }
+
+        private static bool TryParseBackendName(string name, out BackendKind kind)
+        {
+            switch ((name ?? string.Empty).Trim().ToLowerInvariant())
+            {
+                case "locate":
+                    kind = BackendKind.Locate;
+                    return true;
+                case "fd":
+                    kind = BackendKind.Fd;
+                    return true;
+                case "find":
+                    kind = BackendKind.Find;
+                    return true;
+                case "scan":
+                    kind = BackendKind.Scan;
+                    return true;
+            }
+
+            kind = BackendKind.None;
+            return false;
+        }
+
+        private static string BackendNameOf(BackendKind kind)
+        {
+            return new BackendInfo { Kind = kind }.Name;
+        }
+
+        private string[] BackendNames()
+        {
+            var names = new List<string>();
+            foreach (BackendKind kind in AllBackends)
+            {
+                if (IsAvailable(ResolveBackendKind(kind)))
+                {
+                    names.Add(BackendNameOf(kind));
+                }
+            }
+            return names.ToArray();
+        }
+
         private BackendInfo ResolveBackend()
         {
             // 刻意不做缓存：探测只是几次 stat()，而缓存会让环境变量覆盖在
             // 同一进程内完全不生效（测试和诊断场景都需要能立刻切换）。
-            var info = new BackendInfo();
-            string forced = Environment.GetEnvironmentVariable("EVERYTHING_SDK_SEARCH_BACKEND") ?? string.Empty;
-            if (string.Equals(forced, "scan", StringComparison.OrdinalIgnoreCase))
+
+            // 1) 显式 API 偏好优先，便于界面让用户手动指定后端。
+            string preferred = preferredBackend;
+            BackendKind preferredKind;
+            if (!string.IsNullOrEmpty(preferred) && TryParseBackendName(preferred, out preferredKind))
             {
-                info.Kind = BackendKind.Scan;
-                info.Reason = "forced by EVERYTHING_SDK_SEARCH_BACKEND";
-                return info;
+                BackendInfo forced = FirstAvailableFrom(FallbackOrder(preferredKind));
+                forced.Reason += " (preferred)";
+                return forced;
             }
 
-            string database = FirstExistingDatabase();
-            string plocate = FindExecutable("plocate");
-            string locate = FindExecutable("locate");
-
-            // locate 索引可能过期；显式指定 fd/find 时应跳过它。
-            bool forceFind = string.Equals(forced, "find", StringComparison.OrdinalIgnoreCase);
-            bool forceFd = string.Equals(forced, "fd", StringComparison.OrdinalIgnoreCase);
-            bool skipLocate = forceFind || forceFd;
-
-            if (!skipLocate && database != null)
+            // 2) 环境变量，保留无条件脚本化能力。
+            string forcedName = Environment.GetEnvironmentVariable("EVERYTHING_SDK_SEARCH_BACKEND") ?? string.Empty;
+            BackendKind envKind;
+            if (TryParseBackendName(forcedName, out envKind))
             {
-                if (plocate != null)
+                BackendInfo forced = FirstAvailableFrom(FallbackOrder(envKind));
+                forced.Reason += " (EVERYTHING_SDK_SEARCH_BACKEND)";
+                return forced;
+            }
+
+            // 3) 自动：locate → fd → find → scan。
+            return FirstAvailableFrom(FallbackOrder(BackendKind.Locate));
+        }
+
+        /// <summary>构造指定后端的探测结果；Executable 为 null 表示本机不可用。</summary>
+        private static BackendInfo ResolveBackendKind(BackendKind kind)
+        {
+            var info = new BackendInfo { Kind = kind };
+
+            switch (kind)
+            {
+                case BackendKind.Locate:
                 {
-                    info.Kind = BackendKind.Locate;
-                    info.Executable = plocate;
-                    info.DatabaseLoaded = true;
-                    info.Reason = "plocate database " + database;
+                    string database = FirstExistingDatabase();
+                    if (database == null)
+                    {
+                        info.Reason = "locate database missing";
+                        return info;
+                    }
+
+                    string plocate = FindExecutable("plocate");
+                    if (plocate != null)
+                    {
+                        info.Executable = plocate;
+                        info.DatabaseLoaded = true;
+                        info.Reason = "plocate database " + database;
+                        return info;
+                    }
+
+                    string locate = FindExecutable("locate");
+                    if (locate != null)
+                    {
+                        info.Executable = locate;
+                        info.DatabaseLoaded = true;
+                        info.Reason = "locate database " + database;
+                        return info;
+                    }
+
+                    info.Reason = "locate executable missing";
                     return info;
                 }
-                if (locate != null)
+                case BackendKind.Fd:
                 {
-                    info.Kind = BackendKind.Locate;
-                    info.Executable = locate;
-                    info.DatabaseLoaded = true;
-                    info.Reason = "locate database " + database;
+                    // Debian/Ubuntu 的包名是 fd-find，可执行文件叫 fdfind，
+                    // 因此两个名字都要探测。
+                    string fd = FindExecutable("fd");
+                    string fdfind = FindExecutable("fdfind");
+                    info.Executable = fd ?? fdfind;
+                    info.Reason = info.Executable == null
+                        ? "fd executable missing"
+                        : "fd executable " + info.Executable;
+                    return info;
+                }
+                case BackendKind.Find:
+                {
+                    info.Executable = FindExecutable("find");
+                    info.Reason = info.Executable == null
+                        ? "find executable missing"
+                        : "find executable " + info.Executable;
+                    return info;
+                }
+                default:
+                    info.Reason = "in-process scan";
+                    return info;
+            }
+        }
+
+        private static bool IsAvailable(BackendInfo info)
+        {
+            return info.Kind == BackendKind.Scan || !string.IsNullOrEmpty(info.Executable);
+        }
+
+        // 显式指定某个后端后，不可用时要按什么顺序回退。
+        // 指定 fd/find 时跳过 locate：索引可能过期，用户点名了就别用旧快照。
+        private static BackendKind[] FallbackOrder(BackendKind forced)
+        {
+            switch (forced)
+            {
+                case BackendKind.Fd:
+                    return new[] { BackendKind.Fd, BackendKind.Find, BackendKind.Scan };
+                case BackendKind.Find:
+                    return new[] { BackendKind.Find, BackendKind.Scan };
+                case BackendKind.Scan:
+                    return new[] { BackendKind.Scan };
+                default:
+                    return new[] { BackendKind.Locate, BackendKind.Fd, BackendKind.Find, BackendKind.Scan };
+            }
+        }
+
+        private static BackendInfo FirstAvailableFrom(IEnumerable<BackendKind> order)
+        {
+            foreach (BackendKind candidate in order)
+            {
+                BackendInfo info = ResolveBackendKind(candidate);
+                if (IsAvailable(info))
+                {
                     return info;
                 }
             }
 
-            // fd 比 find 快，但不保证安装；Debian/Ubuntu 的包名是 fd-find，
-            // 可执行文件叫 fdfind，因此两个名字都要探测。
-            string fd = FindExecutable("fd");
-            string fdfind = FindExecutable("fdfind");
-            if (!forceFind && (fd != null || fdfind != null))
-            {
-                info.Kind = BackendKind.Fd;
-                info.Executable = fd ?? fdfind;
-                info.Reason = "fd executable " + info.Executable;
-                return info;
-            }
-
-            string find = FindExecutable("find");
-            if (find != null)
-            {
-                info.Kind = BackendKind.Find;
-                info.Executable = find;
-                info.Reason = database == null ? "locate database missing, fallback to find" : "forced by EVERYTHING_SDK_SEARCH_BACKEND";
-                return info;
-            }
-
-            info.Kind = BackendKind.Scan;
-            info.Reason = "no locate database, fd or find executable, fallback to in-process scan";
-            return info;
+            // 理论上到不了这里：FallbackOrder 的最后一项一定是 Scan。
+            return ResolveBackendKind(BackendKind.Scan);
         }
 
         private static string FindExecutable(string name)

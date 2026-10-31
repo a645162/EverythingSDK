@@ -49,6 +49,12 @@ namespace Lib.Everything
 
         public string Name => ResolveBackend().Name;
 
+        public string[] AvailableBackends => BackendNames();
+
+        public string PreferredBackend => PreferredBackendName();
+
+        public void SetPreferredBackend(string name) => SetPreferredBackendName(name);
+
         public void Reset()
         {
             searchText = string.Empty;

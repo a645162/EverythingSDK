@@ -411,6 +411,22 @@ std::wstring EverythingClient::GetBackendName() {
   return Posix::WideFromUtf8(Posix::BackendName(Posix::DetectBackend().kind));
 }
 
+std::vector<std::wstring> EverythingClient::AvailableBackends() {
+  std::vector<std::wstring> names;
+  for (const Posix::BackendKind kind : Posix::AvailableBackends()) {
+    names.push_back(Posix::WideFromUtf8(Posix::BackendName(kind)));
+  }
+  return names;
+}
+
+void EverythingClient::SetPreferredBackend(const std::wstring &name) {
+  Posix::SetBackendPreference(Posix::Utf8FromWide(name));
+}
+
+std::wstring EverythingClient::GetPreferredBackend() {
+  return Posix::WideFromUtf8(Posix::BackendPreference());
+}
+
 std::wstring ToWideString(const EverythingError error) {
   switch (error) {
   case EverythingError::Ok:
