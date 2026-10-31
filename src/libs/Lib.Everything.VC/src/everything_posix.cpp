@@ -310,6 +310,7 @@ std::vector<EverythingResult> EverythingClient::Query() {
 
   std::vector<Entry> entries;
   entries.reserve(candidates.paths.size());
+  const bool needs_metadata = query.needs_metadata();
   for (const std::string &path : candidates.paths) {
     // locate/find 只做粗筛（glob），这里用真实语法做最终判定。
     if (!query.matches(path)) {
@@ -318,6 +319,14 @@ std::vector<EverythingResult> EverythingClient::Query() {
 
     Entry entry;
     entry.path = path;
+    if (needs_metadata) {
+      // size:/dc:/dm:/da:/content: 必须读到文件元数据或内容才能判定，
+      // 粗筛阶段刻意跳过它们，所以这里补一次真正的检查。
+      EnsureMetadata(entry);
+      if (!query.matches(path, entry.metadata)) {
+        continue;
+      }
+    }
     entries.push_back(std::move(entry));
   }
 

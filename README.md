@@ -215,6 +215,14 @@ The POSIX backend implements the commonly used subset of the Everything grammar:
 - `ext:png;!jpg` style negation via `!term`.
 - `path:"Program Files"` — substring match on the full path.
 - `file:"IMG_0001"` — substring match on the file name.
+- `size:>1mb` — size comparison; supports `<`, `<=`, `=`, `>=`, `>` and
+  `b`/`kb`/`mb`/`gb`/`tb` units (binary, 1 kb = 1024 bytes).
+- `size:1mb..2gb` — inclusive size range. Folders count as 0 bytes, like Everything.
+- `dm:>=2024-01-01`, `dc:<2024-06-01 12:30`, `da:2024-01-01..2024-12-31` —
+  modified / created / accessed time filters (`datemodified:`, `datecreated:`,
+  `dateaccessed:` also work). A date without a time means the whole day.
+- `content:"error"` — the file contains the text. Only the first 256 KiB are
+  read, so this is a prefix match; quoting keeps spaces inside one term.
 - `"quoted phrase"` — grouped phrase, spaces included.
 - `*.png`, `IMG_????.jpg` — `*` and `?` wildcards, matched against the whole
   name (or whole path when `MatchPath` is set). `[` and `]` are literal.
@@ -223,8 +231,11 @@ The POSIX backend implements the commonly used subset of the Everything grammar:
 - `Regex` — ECMAScript regex; an invalid pattern degrades to literal matching
   instead of failing the whole query.
 
-Advanced Everything filters without a POSIX equivalent (`size:`, `dm:`,
-`rc:`, `content:`, file lists, `$` macros) are treated as plain text.
+`size:`/`dm:`/`dc:`/`da:`/`content:` need file metadata or content, so they are
+applied after the backend has produced candidates. Everything filters without
+a POSIX equivalent (`rc:`, file lists, `$` macros) are treated as plain text.
+A filter whose value cannot be parsed (e.g. `size:abc`) also degrades to plain
+text.
 
 ### Behaviour differences from Everything
 

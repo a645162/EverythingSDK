@@ -103,13 +103,27 @@ namespace Lib.Everything
                 List<string> candidates = CollectCandidates(query, EffectiveCandidateCap());
 
                 var entries = new List<Entry>(candidates.Count);
+                bool needsMetadata = query.NeedsMetadata;
                 foreach (string candidate in candidates)
                 {
+                    // locate/find 只做粗筛（glob），这里用真实语法做最终判定。
                     if (!query.Matches(candidate))
                     {
                         continue;
                     }
-                    entries.Add(new Entry(candidate));
+
+                    var entry = new Entry(candidate);
+                    if (needsMetadata)
+                    {
+                        // size:/dc:/dm:/da:/content: 必须读到文件元数据或内容才能
+                        // 判定，粗筛阶段刻意跳过它们，所以这里补一次真正的检查。
+                        EnsureMetadata(entry);
+                        if (!query.Matches(entry))
+                        {
+                            continue;
+                        }
+                    }
+                    entries.Add(entry);
                 }
 
                 EverythingSort sortValue = (EverythingSort)sort;

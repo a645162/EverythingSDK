@@ -212,13 +212,22 @@ POSIX 后端实现了 Everything 语法中常用的子集：
 - `!term` —— 排除条件，例如 `ext:png !screenshot`。
 - `path:"Program Files"` —— 完整路径包含。
 - `file:"IMG_0001"` —— 文件名包含。
+- `size:>1mb` —— 大小比较，支持 `<`、`<=`、`=`、`>=`、`>` 与
+  `b`/`kb`/`mb`/`gb`/`tb` 单位（二进制，1 kb = 1024 字节）。
+- `size:1mb..2gb` —— 大小闭区间；目录按 0 字节计，与 Everything 一致。
+- `dm:>=2024-01-01`、`dc:<2024-06-01 12:30`、`da:2024-01-01..2024-12-31` ——
+  修改 / 创建 / 访问时间过滤（也支持 `datemodified:`、`datecreated:`、
+  `dateaccessed:`）。只写日期时按「整天」理解。
+- `content:"error"` —— 文件内容包含该文本。只读取文件前 256 KiB，
+  因此是前缀匹配；引号可把空格包在同一个词条内。
 - `"带空格的短语"` —— 引号分组。
 - `*.png`、`IMG_????.jpg` —— `*` 与 `?` 通配符，匹配整个文件名（`MatchPath` 打开时匹配整个路径）；`[` 与 `]` 按字面量处理。
 - 裸词 —— 子串匹配，遵循 `MatchPath`、`MatchCase`、`MatchWholeWord`。
 - `Regex` —— ECMAScript 正则；非法正则退化为字面量匹配，而不是让整次查询失败。
 
-Everything 中在 POSIX 上没有对应语义的高级过滤词（`size:`、`dm:`、`rc:`、
-`content:`、文件列表、`$` 宏等）会按普通文本处理。
+`size:`/`dm:`/`dc:`/`da:`/`content:` 需要读取文件元数据或内容，因此会在后端
+产出候选之后再判定。POSIX 上没有对应语义的过滤词（`rc:`、文件列表、`$` 宏等）
+按普通文本处理；值无法解析的过滤器（如 `size:abc`）同样退化为普通文本。
 
 ### 与 Everything 的行为差异
 

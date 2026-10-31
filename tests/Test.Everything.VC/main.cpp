@@ -101,6 +101,20 @@ int main() {
   WriteFile(root, "notes.txt");
   WriteFile(root + "/sub", "delta.png");
 
+  // 大小与内容过滤需要可区分的样本：其余文件都是 22 字节。
+  {
+    std::ofstream big(root + "/big.bin", std::ios::binary);
+    big << std::string(8U * 1024U, 'x');
+  }
+  {
+    std::ofstream tiny(root + "/tiny.bin", std::ios::binary);
+    tiny << "0123456789";
+  }
+  {
+    std::ofstream report(root + "/report.txt", std::ios::binary);
+    report << "nothing to see, then a needle appears";
+  }
+
   ::setenv("EVERYTHING_SDK_SEARCH_BACKEND", "scan", 1);
   ::setenv("EVERYTHING_SDK_SEARCH_ROOTS", root.c_str(), 1);
 
@@ -150,12 +164,60 @@ int main() {
     // 元数据
     client.SearchText = L"ext:txt";
     const std::vector<EverythingResult> text_files = client.Query();
-    Check(text_files.size() == 1, "ext:txt should return one file");
+    Check(text_files.size() == 2, "ext:txt should return two text files");
     if (!text_files.empty()) {
       Check(text_files.front().IsFile, "txt result should be a file");
       Check(!text_files.front().IsFolder, "txt result must not be a folder");
       Check(text_files.front().HasSize, "size should be reported");
     }
+
+    // size: 比较与区间
+    client.SearchText = L"size:>1kb";
+    const std::vector<EverythingResult> large = client.Query();
+    Check(large.size() == 1, "size:>1kb should return only big.bin");
+    Check(Contains(large, "big.bin"), "size:>1kb should include big.bin");
+
+    client.SearchText = L"size:<20";
+    const std::vector<EverythingResult> small = client.Query();
+    // tiny.bin 是 10 字节；目录 sub 按 0 字节计，因此这里应有两个条目。
+    Check(small.size() == 2, "size:<20 should return tiny.bin and the folder");
+    Check(Contains(small, "tiny.bin"), "size:<20 should include tiny.bin");
+
+    client.SearchText = L"size:1kb..16kb";
+    const std::vector<EverythingResult> ranged = client.Query();
+    Check(ranged.size() == 1, "size:1kb..16kb should return only big.bin");
+    Check(Contains(ranged, "big.bin"), "size range should include big.bin");
+
+    client.SearchText = L"* !size:<1kb";
+    const std::vector<EverythingResult> negated_size = client.Query();
+    Check(negated_size.size() == 1, "!size:<1kb should leave only big.bin");
+
+    // dm:/dc: 时间过滤（样本刚创建，用 1990 年做分界）
+    // 命中数是 8 个文件 + 1 个子目录。
+    client.SearchText = L"dm:>1990-01-01";
+    const std::vector<EverythingResult> recent = client.Query();
+    Check(recent.size() == 9, "dm:>1990-01-01 should match every entry");
+
+    client.SearchText = L"dm:<1990-01-01";
+    Check(client.Query().empty(), "dm:<1990-01-01 should match nothing");
+
+    client.SearchText = L"dc:>=1990-01-01";
+    Check(client.Query().size() == 9,
+          "dc:>=1990-01-01 should match every entry");
+
+    client.SearchText = L"dm:1990-01-01..1991-01-01";
+    Check(client.Query().empty(), "dm range in the past should match nothing");
+
+    // content: 只读文件开头，命中 needle
+    client.SearchText = L"content:needle";
+    const std::vector<EverythingResult> contents = client.Query();
+    Check(contents.size() == 1, "content:needle should return report.txt");
+    Check(Contains(contents, "report.txt"),
+          "content:needle should include report.txt");
+
+    client.SearchText = L"content:needle !report";
+    Check(client.Query().empty(),
+          "content:needle !report should match nothing");
 
     Check(!EverythingClient::GetBackendName().empty(),
           "backend name should not be empty");
