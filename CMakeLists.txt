@@ -1,9 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
 
-if(NOT WIN32)
-    message(FATAL_ERROR "EverythingSDK VC support currently targets Windows only.")
-endif()
-
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/everythingsdk_version.cmake")
 
 set(EVERYTHINGSDK_VERSION_PROPS
@@ -16,6 +12,7 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
 option(EVERYTHINGSDK_BUILD_WIN32_EXAMPLE "Build the Win32 desktop example." ON)
+option(EVERYTHINGSDK_BUILD_TESTS "Build the portable (POSIX) tests." OFF)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -23,33 +20,42 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(EVERYTHINGSDK_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/EverythingSDK")
 
-if(CMAKE_VS_PLATFORM_NAME STREQUAL "Win32")
-    set(EVERYTHINGSDK_CURRENT_NATIVE_DLL "${CMAKE_CURRENT_SOURCE_DIR}/native/Everything32.dll")
-elseif(CMAKE_VS_PLATFORM_NAME STREQUAL "x64")
-    set(EVERYTHINGSDK_CURRENT_NATIVE_DLL "${CMAKE_CURRENT_SOURCE_DIR}/native/Everything64.dll")
-elseif(CMAKE_VS_PLATFORM_NAME STREQUAL "ARM64")
-    set(EVERYTHINGSDK_CURRENT_NATIVE_DLL "${CMAKE_CURRENT_SOURCE_DIR}/native/EverythingARM64.dll")
-elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^[Aa][Rr][Mm]64$")
-    set(EVERYTHINGSDK_CURRENT_NATIVE_DLL "${CMAKE_CURRENT_SOURCE_DIR}/native/EverythingARM64.dll")
-elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
-    set(EVERYTHINGSDK_CURRENT_NATIVE_DLL "${CMAKE_CURRENT_SOURCE_DIR}/native/Everything64.dll")
-else()
-    set(EVERYTHINGSDK_CURRENT_NATIVE_DLL "${CMAKE_CURRENT_SOURCE_DIR}/native/Everything32.dll")
+if(WIN32)
+    if(CMAKE_VS_PLATFORM_NAME STREQUAL "Win32")
+        set(EVERYTHINGSDK_CURRENT_NATIVE_DLL "${CMAKE_CURRENT_SOURCE_DIR}/native/Everything32.dll")
+    elseif(CMAKE_VS_PLATFORM_NAME STREQUAL "x64")
+        set(EVERYTHINGSDK_CURRENT_NATIVE_DLL "${CMAKE_CURRENT_SOURCE_DIR}/native/Everything64.dll")
+    elseif(CMAKE_VS_PLATFORM_NAME STREQUAL "ARM64")
+        set(EVERYTHINGSDK_CURRENT_NATIVE_DLL "${CMAKE_CURRENT_SOURCE_DIR}/native/EverythingARM64.dll")
+    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^[Aa][Rr][Mm]64$")
+        set(EVERYTHINGSDK_CURRENT_NATIVE_DLL "${CMAKE_CURRENT_SOURCE_DIR}/native/EverythingARM64.dll")
+    elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
+        set(EVERYTHINGSDK_CURRENT_NATIVE_DLL "${CMAKE_CURRENT_SOURCE_DIR}/native/Everything64.dll")
+    else()
+        set(EVERYTHINGSDK_CURRENT_NATIVE_DLL "${CMAKE_CURRENT_SOURCE_DIR}/native/Everything32.dll")
+    endif()
 endif()
 
 add_subdirectory(src/libs/Lib.Everything.VC)
 
-if(EVERYTHINGSDK_BUILD_WIN32_EXAMPLE)
+if(WIN32 AND EVERYTHINGSDK_BUILD_WIN32_EXAMPLE)
     add_subdirectory(src/examples/Example.Everything.Win32.VC)
 endif()
 
-install(FILES
-    "${CMAKE_CURRENT_SOURCE_DIR}/native/Everything32.dll"
-    "${CMAKE_CURRENT_SOURCE_DIR}/native/Everything64.dll"
-    "${CMAKE_CURRENT_SOURCE_DIR}/native/EverythingARM.dll"
-    "${CMAKE_CURRENT_SOURCE_DIR}/native/EverythingARM64.dll"
-    DESTINATION "native"
-)
+if(EVERYTHINGSDK_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests/Test.Everything.VC)
+endif()
+
+if(WIN32)
+    install(FILES
+        "${CMAKE_CURRENT_SOURCE_DIR}/native/Everything32.dll"
+        "${CMAKE_CURRENT_SOURCE_DIR}/native/Everything64.dll"
+        "${CMAKE_CURRENT_SOURCE_DIR}/native/EverythingARM.dll"
+        "${CMAKE_CURRENT_SOURCE_DIR}/native/EverythingARM64.dll"
+        DESTINATION "native"
+    )
+endif()
 
 configure_package_config_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/EverythingSDKConfig.cmake.in"

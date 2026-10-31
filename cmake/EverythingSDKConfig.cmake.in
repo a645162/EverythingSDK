@@ -1,15 +1,15 @@
 @PACKAGE_INIT@
 
-if(NOT WIN32)
-    message(FATAL_ERROR "EverythingSDK VC support currently targets Windows only.")
-endif()
-
 include("${CMAKE_CURRENT_LIST_DIR}/EverythingSDKTargets.cmake")
 
-set(EverythingSDK_NATIVE_DIR "${PACKAGE_PREFIX_DIR}/native")
-set(EverythingSDK_NATIVE_X86 "${EverythingSDK_NATIVE_DIR}/Everything32.dll")
-set(EverythingSDK_NATIVE_X64 "${EverythingSDK_NATIVE_DIR}/Everything64.dll")
-set(EverythingSDK_NATIVE_ARM "${EverythingSDK_NATIVE_DIR}/EverythingARM.dll")
-set(EverythingSDK_NATIVE_ARM64 "${EverythingSDK_NATIVE_DIR}/EverythingARM64.dll")
+# 原生 DLL 只存在于 Windows 包内；POSIX 后端直接调用系统 locate/find，
+# 没有额外运行库，因此这些变量仅在 Windows 上导出。
+if(WIN32)
+    set(EverythingSDK_NATIVE_DIR "${PACKAGE_PREFIX_DIR}/native")
+    set(EverythingSDK_NATIVE_X86 "${EverythingSDK_NATIVE_DIR}/Everything32.dll")
+    set(EverythingSDK_NATIVE_X64 "${EverythingSDK_NATIVE_DIR}/Everything64.dll")
+    set(EverythingSDK_NATIVE_ARM "${EverythingSDK_NATIVE_DIR}/EverythingARM.dll")
+    set(EverythingSDK_NATIVE_ARM64 "${EverythingSDK_NATIVE_DIR}/EverythingARM64.dll")
+endif()
 
 check_required_components(EverythingSDK)

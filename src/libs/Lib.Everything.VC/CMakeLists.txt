@@ -1,6 +1,25 @@
-add_library(Lib.Everything.VC STATIC
-    src/Everything.cpp
-)
+add_library(Lib.Everything.VC STATIC)
+
+if(WIN32)
+    target_sources(Lib.Everything.VC PRIVATE
+        src/Everything.cpp
+    )
+else()
+    # POSIX 没有 Everything 服务：用 plocate/locate、find 或进程内扫描提供同一套 API。
+    target_sources(Lib.Everything.VC PRIVATE
+        src/everything_posix.cpp
+        src/posix/file_metadata.cpp
+        src/posix/file_metadata.h
+        src/posix/process_runner.cpp
+        src/posix/process_runner.h
+        src/posix/search_backend.cpp
+        src/posix/search_backend.h
+        src/posix/search_query.cpp
+        src/posix/search_query.h
+        src/posix/wide_string.cpp
+        src/posix/wide_string.h
+    )
+endif()
 
 set(_everythingsdk_generated_include_dir
     "${CMAKE_CURRENT_BINARY_DIR}/generated/include")
@@ -22,7 +41,10 @@ configure_file(
 )
 
 target_compile_features(Lib.Everything.VC PUBLIC cxx_std_11)
-target_compile_definitions(Lib.Everything.VC PRIVATE UNICODE _UNICODE WIN32_LEAN_AND_MEAN NOMINMAX)
+
+if(WIN32)
+    target_compile_definitions(Lib.Everything.VC PRIVATE UNICODE _UNICODE WIN32_LEAN_AND_MEAN NOMINMAX)
+endif()
 
 target_include_directories(Lib.Everything.VC
     PUBLIC
