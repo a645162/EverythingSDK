@@ -660,12 +660,15 @@ namespace Lib
     EverythingVersion EverythingClient::GetVersion()
     {
         auto& api = NativeApi::Instance();
-        return EverythingVersion {
-            api.GetMajorVersion(),
-            api.GetMinorVersion(),
-            api.GetRevision(),
-            api.GetBuildNumber()
-        };
+
+        // EverythingVersion 的成员带默认成员初始化器（C++11 NSDMI），
+        // 在 C++11 下就不再是聚合类型，不能用花括号聚合初始化，只能逐个赋值。
+        EverythingVersion version;
+        version.Major = api.GetMajorVersion();
+        version.Minor = api.GetMinorVersion();
+        version.Revision = api.GetRevision();
+        version.Build = api.GetBuildNumber();
+        return version;
     }
 
     EverythingTargetMachine EverythingClient::GetTargetMachine()
@@ -676,6 +679,11 @@ namespace Lib
     bool EverythingClient::IsDBLoaded()
     {
         return NativeApi::Instance().IsDBLoaded();
+    }
+
+    std::wstring EverythingClient::GetBackendName()
+    {
+        return L"Everything";
     }
 
     bool EverythingClient::IsEverythingRunning()

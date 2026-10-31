@@ -106,7 +106,9 @@ namespace Lib
             static_cast<std::uint32_t>(lhs) & static_cast<std::uint32_t>(rhs));
     }
 
-    constexpr EverythingRequestFlags& operator|=(EverythingRequestFlags& lhs, const EverythingRequestFlags rhs) noexcept
+    // C++11 要求 constexpr 函数体只有一条 return 语句，而这里必须先赋值，
+    // 因此改成 inline；GCC/Clang 在 -std=c++11 下会拒绝 constexpr 版本。
+    inline EverythingRequestFlags& operator|=(EverythingRequestFlags& lhs, const EverythingRequestFlags rhs) noexcept
     {
         lhs = lhs | rhs;
         return lhs;
@@ -195,6 +197,10 @@ namespace Lib
         static EverythingTargetMachine GetTargetMachine();
         static bool IsDBLoaded();
         static bool IsEverythingRunning();
+
+        // 实际使用的搜索后端名称。Windows 返回 "Everything"；
+        // POSIX 返回 "locate" / "fd" / "find" / "scan"（见 README 的 Linux 章节）。
+        static std::wstring GetBackendName();
     };
 
     std::wstring ToWideString(EverythingError error);
