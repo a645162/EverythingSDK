@@ -1,0 +1,67 @@
+---
+# EverythingSDK 的 C++ 风格配置。
+#
+# 为什么需要：本库是自有子模块（libs/EverythingSDK），此前没有自己的
+# .clang-format，`scripts/image_viewer/build/format.py` 会一路向上找到主工程的
+# 配置，导致「清理子模块」和「清理主工程」共用同一份规则却没人负责校准；
+# 而主工程根 .clang-format 又明确写着不要用 format.py 清理 libs/。
+# 本文件把子模块的风格钉死，主工程与子模块从此各管各的。
+#
+# 为什么是 2 空格：与主工程 ImageViewerQt 保持一致，跨仓库阅读与
+# `format.py` 的默认输出不再产生整片重排噪声。
+#
+# 注意：本库要求 C++11（target_compile_features cxx_std_11），
+# 不要因为格式文件的 Standard 值就去使用 C++14/17 语法。
+#
+# 参考：https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+Language: Cpp
+BasedOnStyle: LLVM
+
+# 行宽与缩进：2 空格 / 80 列，与主工程一致。
+ColumnLimit: 80
+IndentWidth: 2
+TabWidth: 2
+UseTab: Never
+ContinuationIndentWidth: 4
+
+# 访问说明符与命名空间不额外缩进（public:/namespace 顶格）。
+AccessModifierOffset: -2
+NamespaceIndentation: None
+IndentCaseLabels: false
+IndentPPDirectives: None
+
+# 指针/引用绑定到名字一侧：const char *name、Type &value。
+DerivePointerAlignment: false
+PointerAlignment: Right
+ReferenceAlignment: Pointer
+QualifierAlignment: Left
+
+# 函数体与控制语句：短函数、短 if 允许单行；case 标签不合并。
+AllowShortFunctionsOnASingleLine: All
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+AllowShortLoopsOnASingleLine: true
+AllowShortBlocksOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: false
+
+# 大括号与模板：函数体大括号紧贴函数名；模板声明不强制换行。
+BreakBeforeBraces: Attach
+AlwaysBreakTemplateDeclarations: No
+SpaceAfterTemplateKeyword: true
+
+# 构造初始化列表：能挤进一行就挤一行，否则逐项换行。
+BreakConstructorInitializers: BeforeColon
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
+
+# 括号后对齐续行。
+AlignAfterOpenBracket: Align
+
+# include 顺序按平台分组人工维护，不做字典序重排（避免噪声 diff）。
+SortIncludes: false
+SortUsingDeclarations: true
+
+# 注释不重排、不重排行宽：中文注释常超宽，重排会破坏可读性。
+ReflowComments: false
+SpacesBeforeTrailingComments: 1
+
+# 语言标准：本库要求 C++11，取最近可用的 c++11。
+Standard: c++11
