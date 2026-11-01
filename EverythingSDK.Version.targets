@@ -1,8 +1,4 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <ItemGroup Condition="'$(UsingMicrosoftNETSdk)' != 'true'">
-    <Compile Include="$(IntermediateOutputPath)EverythingSdk.Version.g.cs" Visible="false" />
-  </ItemGroup>
-
   <Target
     Name="EverythingSdkGenerateVersionAssemblyInfo"
     BeforeTargets="BeforeCompile"
@@ -27,5 +23,12 @@
       Language="C#"
       OutputFile="$(EverythingSdkVersionAssemblyInfoPath)"
       AssemblyAttributes="@(EverythingSdkAssemblyAttribute)" />
+
+    <!-- 生成文件落在 obj/ 下：SDK 工程的默认 Compile 通配会排除该目录，传统工程也不会
+         自动包含它，所以必须在这里显式加入编译。否则版本特性只生成不编译，
+         程序集版本会静默变成 0.0.0.0。 -->
+    <ItemGroup>
+      <Compile Include="$(EverythingSdkVersionAssemblyInfoPath)" Visible="false" />
+    </ItemGroup>
   </Target>
 </Project>
