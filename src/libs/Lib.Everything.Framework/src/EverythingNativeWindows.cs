@@ -20,6 +20,15 @@ namespace Lib.Everything
         private static readonly Lazy<NativeExports> nativeExports =
             new Lazy<NativeExports>(LoadNativeExports, true);
 
+        /// <summary>
+        /// Max=0（默认值）时下发给 Everything 的安全上限。
+        /// Everything 1.4 的 IPC 把 SetMax(0) 当成“返回 0 条”，而“完全不调 SetMax”才是
+        /// 真·不限——空搜索会一次性吐出 500 多万行，实测能把 Everything 进程撑到 OOM。
+        /// 这里与 POSIX 后端 EVERYTHING_SDK_MAX_CANDIDATES 的 200000 对齐，
+        /// 让两端默认查询量级一致；调用方显式传入更大的值时仍然按原值下发。
+        /// </summary>
+        private const uint DefaultMaxResults = 200000;
+
         public string Name => "Everything";
 
         // Windows 上只有 Everything 一个后端，没有可切换的项。
@@ -40,7 +49,7 @@ namespace Lib.Everything
         public void SetMatchCase(bool enabled) => Native.Everything_SetMatchCase(enabled);
         public void SetMatchWholeWord(bool enabled) => Native.Everything_SetMatchWholeWord(enabled);
         public void SetRegex(bool enabled) => Native.Everything_SetRegex(enabled);
-        public void SetMax(uint value) => Native.Everything_SetMax(value);
+        public void SetMax(uint value) => Native.Everything_SetMax(value == 0 ? DefaultMaxResults : value);
         public void SetOffset(uint value) => Native.Everything_SetOffset(value);
         public void SetSort(uint value) => Native.Everything_SetSort(value);
         public void SetRequestFlags(uint value) => Native.Everything_SetRequestFlags(value);

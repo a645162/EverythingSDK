@@ -22,6 +22,9 @@ namespace Lib.Everything
     {
         private const int DefaultBufferSize = 260;
 
+        /// <summary>长路径（&gt; MAX_PATH）二次获取用的缓冲区长度，与 Windows 长路径上限同量级。</summary>
+        private const int ExtendedPathBufferSize = 32768;
+
         /// <summary>搜索关键字，空串匹配全部。对应 Everything_SetSearchW。</summary>
         public string SearchText { get; set; }
 
@@ -37,7 +40,12 @@ namespace Lib.Everything
         /// <summary>启用正则，默认 false。对应 Everything_SetRegex。</summary>
         public bool Regex { get; set; }
 
-        /// <summary>返回结果上限，0 表示不限。对应 Everything_SetMax。</summary>
+        /// <summary>
+        /// 返回结果上限，0 表示由后端决定上限。对应 Everything_SetMax。
+        /// Windows 上 Everything 的 IPC 会把 0 当成“返回 0 条”，因此 0 实际按
+        /// 安全上限 200000 下发（与 POSIX 后端的候选上限一致），避免一次拉取
+        /// 百万级结果把 Everything 进程撑爆；显式传入更大的值不受影响。
+        /// </summary>
         public uint Max { get; set; }
 
         /// <summary>结果偏移，用于分页。对应 Everything_SetOffset。</summary>
@@ -48,12 +56,16 @@ namespace Lib.Everything
 
         /// <summary>请求的结果字段，默认完整路径与文件名。对应 Everything_SetRequestFlags。</summary>
         public EverythingRequestFlags RequestFlags { get; set; } =
+            EverythingRequestFlags.FileName |
             EverythingRequestFlags.FullPathAndFileName |
             EverythingRequestFlags.Path |
             EverythingRequestFlags.Extension |
             EverythingRequestFlags.Size |
             EverythingRequestFlags.DateModified |
-            EverythingRequestFlags.DateCreated;
+            EverythingRequestFlags.DateCreated |
+            // Attributes 不请求时 Everything 会回 0xFFFFFFFF（INVALID_FILE_ATTRIBUTES），
+            // 调用方没法区分“没属性”和“没请求”，所以默认一起取回来。
+            EverythingRequestFlags.Attributes;
 
         /// <summary>最近一次查询返回的错误码。查询失败后可用它定位原因。</summary>
         public EverythingError LastError { get; private set; }
@@ -179,14 +191,25 @@ namespace Lib.Everything
 
         private static string GetFullPath(IEverythingBackend backend, uint index)
         {
-            // 先用固定缓冲区取，不足时按实际需要的字符数扩容重取。
+            // 两个后端返回值的语义不一样：
+            // POSIX 返回“含结尾 0 的总长度”，缓冲区不足时干脆不填；
+            // Windows 的 Everything_GetResultFullPathNameW 返回“实际写入的字符数”，
+            // 缓冲区不足时静默截断，不会告诉调用方真实长度。
+            // 因此统一判据：结果顶到缓冲区上限（或缓冲区根本没被填）就换长路径缓冲区重取一次。
             var buf = new StringBuilder(DefaultBufferSize);
-            uint needed = backend.ResultFullPathName(index, buf, (uint)buf.Capacity);
-            if (needed > buf.Capacity)
+            int capacity = buf.Capacity;
+            uint written = backend.ResultFullPathName(index, buf, (uint)capacity);
+            if (written == 0)
             {
-                buf = new StringBuilder((int)needed);
+                return string.Empty;
+            }
+
+            if (written >= capacity - 1 || buf.Length == 0)
+            {
+                buf = new StringBuilder(ExtendedPathBufferSize);
                 backend.ResultFullPathName(index, buf, (uint)buf.Capacity);
             }
+
             return buf.ToString();
         }
 

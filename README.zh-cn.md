@@ -115,6 +115,18 @@ foreach (var item in client.Query())
 - `EverythingClient.IsEverythingRunning()`
 - `EverythingClient.GetBackendName()`
 
+### 结果上限
+
+`EverythingClient.Max` / `EverythingClient::Max` 是下发给原生 SDK 的结果上限。
+默认值 `0` **不是**「不限」：不限的查询会返回几百万行，足以把 Everything 进程的
+内存撑爆，所以 `0` 会按 200000 行的安全上限下发（与 POSIX 后端
+`EVERYTHING_SDK_MAX_CANDIDATES` 的默认值一致）。确实需要更多行时请显式传入更大的值。
+
+默认 `RequestFlags` 会请求 `FileName`、`FullPathAndFileName`、`Path`、`Extension`、
+`Size`、`DateModified`、`DateCreated` 与 `Attributes`。没有请求的字段拿回来是空的
+（原生 SDK 返回 `NULL`，属性位返回 `0xFFFFFFFF`），所以只有在完全不读该字段时才需要
+去掉对应的标志。
+
 ### 运行时说明
 
 托管封装会在运行时动态加载对应架构的原生 DLL。通常只要把正确的 `Everything*.dll` 放在可执行文件目录、托管程序集目录，或者保证它位于正常 DLL 搜索路径中即可。

@@ -24,6 +24,12 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+if(MSVC)
+    # 源码是 UTF-8（含中文注释），MSVC 默认按本地代码页（如 936）解析会报 C4819；
+    # 显式声明源文件字符集，避免中文 Windows 上把注释当成乱码并产生编码警告。
+    add_compile_options(/source-charset:utf-8)
+endif()
+
 set(EVERYTHINGSDK_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/EverythingSDK")
 
 if(WIN32)

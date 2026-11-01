@@ -192,6 +192,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <PropertyGroup>
+    <!-- 非 SDK 工程不会像 SDK 工程那样自动定义 NETFRAMEWORK，
+         这里显式补上，供源码里的 #if !NETFRAMEWORK 使用，
+         避免把 POSIX 后端（locate/fd/find）编进 .NET Framework 程序集。 -->
+    <DefineConstants>$(DefineConstants);NETFRAMEWORK</DefineConstants>
+  </PropertyGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\..\EverythingSDK.Version.targets" Condition="Exists('..\..\..\EverythingSDK.Version.targets')" />
 </Project>

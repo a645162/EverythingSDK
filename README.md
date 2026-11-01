@@ -115,6 +115,21 @@ foreach (var item in client.Query())
 - `EverythingClient.IsEverythingRunning()`
 - `EverythingClient.GetBackendName()`
 
+### Result limit
+
+`EverythingClient.Max` / `EverythingClient::Max` is the result cap handed to the
+native SDK. The default `0` is **not** "unlimited": an unbounded query returns
+millions of rows and can exhaust the memory of the Everything process, so `0` is
+sent as a 200000-row safety cap (the same default as
+`EVERYTHING_SDK_MAX_CANDIDATES` on POSIX). Pass a larger value explicitly when
+you really need more rows.
+
+The default `RequestFlags` requests `FileName`, `FullPathAndFileName`, `Path`,
+`Extension`, `Size`, `DateModified`, `DateCreated`, and `Attributes`. A field
+that is not requested comes back empty (`NULL` from the native SDK,
+`0xFFFFFFFF` for attributes), so only drop a flag when you never read that
+field.
+
 ### Runtime note
 
 The managed wrappers dynamically load the matching native DLL. In normal usage, keep the proper `Everything*.dll` beside the executable, beside the managed assembly, or provide it through a normal DLL search path.

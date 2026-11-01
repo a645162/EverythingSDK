@@ -215,8 +215,14 @@ public:
     everythingSetRegex_(enabled ? TRUE : FALSE);
   }
 
+  // Max=0（默认值）时下发给 Everything 的安全上限，与 POSIX 后端
+  // EVERYTHING_SDK_MAX_CANDIDATES 的 200000 对齐：
+  // Everything 1.4 把 SetMax(0) 当成“返回 0 条”，而不调 SetMax 才是真·不限，
+  // 空搜索一次拉 500 多万行会把 Everything 进程撑到 OOM。
+  static constexpr std::uint32_t DefaultMaxResults = 200000;
+
   void SetMax(const std::uint32_t value) const noexcept {
-    everythingSetMax_(value);
+    everythingSetMax_(value == 0 ? DefaultMaxResults : value);
   }
 
   void SetOffset(const std::uint32_t value) const noexcept {
@@ -436,18 +442,28 @@ private:
 };
 
 std::wstring GetFullPath(const NativeApi &api, const std::uint32_t index) {
+  // Everything_GetResultFullPathNameW 返回“实际写入的字符数”：缓冲区不足时只返回
+  // 容量上限并被静默截断，不会告诉调用方真实长度。所以判据是“顶到上限就重取一次”，
+  // 而不是“返回值大于容量”，否则超过 259 字符的长路径永远拿不全。
+  // 二次获取用与 Windows 长路径上限同量级的缓冲区。
+  constexpr std::size_t ExtendedPathBufferSize = 32768;
+
   std::wstring buffer(Lib::Everything::EverythingClient::DefaultBufferSize,
                       L'\0');
-  std::uint32_t needed = api.GetResultFullPathName(
-      index, &buffer[0], static_cast<std::uint32_t>(buffer.size()));
-  if (needed > buffer.size()) {
-    buffer.assign(needed, L'\0');
-    needed = api.GetResultFullPathName(
-        index, &buffer[0], static_cast<std::uint32_t>(buffer.size()));
+  const std::size_t capacity = buffer.size();
+  std::uint32_t written = api.GetResultFullPathName(
+      index, &buffer[0], static_cast<std::uint32_t>(capacity));
+  if (written == 0) {
+    return {};
   }
 
-  if (needed == 0) {
-    return {};
+  if (static_cast<std::size_t>(written) >= capacity - 1) {
+    buffer.assign(ExtendedPathBufferSize, L'\0');
+    written = api.GetResultFullPathName(
+        index, &buffer[0], static_cast<std::uint32_t>(buffer.size()));
+    if (written == 0) {
+      return {};
+    }
   }
 
   const std::size_t actualLength = ::wcsnlen(buffer.c_str(), buffer.size());

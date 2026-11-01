@@ -170,14 +170,21 @@ public:
   bool MatchCase{false};
   bool MatchWholeWord{false};
   bool Regex{false};
+  // 结果上限。0 表示由后端决定上限；Windows 上 Everything 的 IPC 会把 0 当成
+  // “返回 0 条”，所以 0 实际按安全上限 200000 下发（与 POSIX 后端候选上限一致），
+  // 避免一次拉取百万级结果把 Everything 进程撑爆。
   std::uint32_t Max{0};
   std::uint32_t Offset{0};
   EverythingSort Sort{EverythingSort::NameAscending};
+  // 默认把 FileName / Attributes 一起请求回来：
+  // 不请求 FileName 时 Everything_GetResultFileNameW 返回 NULL；
+  // 不请求 Attributes 时返回 0xFFFFFFFF，调用方都无法区分“没值”和“没请求”。
   EverythingRequestFlags RequestFlags{
+      EverythingRequestFlags::FileName |
       EverythingRequestFlags::FullPathAndFileName |
       EverythingRequestFlags::Path | EverythingRequestFlags::Extension |
       EverythingRequestFlags::Size | EverythingRequestFlags::DateModified |
-      EverythingRequestFlags::DateCreated};
+      EverythingRequestFlags::DateCreated | EverythingRequestFlags::Attributes};
   EverythingError LastError{EverythingError::Ok};
   std::uint32_t TotalResults{0};
   std::uint32_t NumResults{0};
